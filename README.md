@@ -26,7 +26,21 @@
 
 ## 📦 Descargar
 
-Cada plataforma se compila desde su propia carpeta; no hay binarios pre-generados en este repositorio (para mantenerlo liviano), pero compilar es un solo comando/doble clic en cada caso.
+### Opción 1 — Versión ya compilada (recomendado)
+
+En la sección **[Releases](../../releases/latest)** de este repositorio se publica, para cada versión, el instalable listo para usar de las tres plataformas:
+
+| Plataforma | Archivo a descargar | Uso |
+|---|---|---|
+| 🪟 Windows | `Encriptador-windows-Setup.exe` | Ejecutalo e instala la app (menú Inicio + integración con el clic derecho, sin necesitar admin). También está `Encriptador-windows-x64.exe` (el `.exe` suelto, portable, sin instalador). |
+| 🐧 Linux | `Encriptador-linux-x64.tar.gz` | Descomprimilo y corré `chmod +x Encriptador instalar.sh desinstalar.sh && ./instalar.sh` |
+| 🤖 Android | `Encriptador-android.apk` | Copialo al teléfono y abrilo (permitiendo "orígenes desconocidos" la primera vez), o `adb install -r Encriptador-android.apk` |
+
+Estos binarios se generan y publican automáticamente ([`.github/workflows/release.yml`](.github/workflows/release.yml)) cada vez que se etiqueta una nueva versión (`git tag vX.Y.Z && git push origin vX.Y.Z`).
+
+### Opción 2 — Compilar desde el código fuente
+
+Cada plataforma se compila desde su propia carpeta con un solo comando/doble clic:
 
 | Plataforma | Carpeta | Cómo compilar | Resultado |
 |---|---|---|---|
@@ -34,7 +48,7 @@ Cada plataforma se compila desde su propia carpeta; no hay binarios pre-generado
 | 🐧 Linux | [`linux/`](linux/) | doble clic en `compilar_linux.bat` | carpeta `compilado_linux/` lista para copiar y ejecutar `./instalar.sh` |
 | 🤖 Android | [`android/`](android/) | doble clic en `compilar_android.bat` | `compilado_android/Encriptador.apk` |
 
-> ¿Preferís el código fuente para revisarlo o modificarlo? Está todo en este mismo repositorio, organizado por carpeta según la plataforma — no hace falta descargar nada aparte.
+> El código fuente completo está en este mismo repositorio, organizado por carpeta según la plataforma — no hace falta descargar nada aparte.
 
 ---
 

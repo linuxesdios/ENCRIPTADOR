@@ -1,0 +1,112 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Instalar Inno Setup
+        run: choco install innosetup -y
+
+      - name: Compilar (exe + instalador)
+        run: .\compilar_windows.bat
+        working-directory: windows
+
+      - name: Empaquetar artefactos
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Copy-Item windows\compilado\Encriptador.exe dist\Encriptador-windows-x64.exe
+          Copy-Item windows\salida_instalador\Encriptador_Setup.exe dist\Encriptador-windows-Setup.exe
+        shell: pwsh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: dist/*
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Compilar (linux-x64, self-contained)
+        run: |
+          dotnet publish Encriptador/Encriptador.csproj -c Release -r linux-x64 --self-contained true \
+            -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true \
+            -o compilado_linux
+          cp Encriptador/Assets/icono.png compilado_linux/icono.png
+        working-directory: linux
+
+      - name: Empaquetar artefacto (tar.gz)
+        run: |
+          mkdir -p dist
+          chmod +x linux/compilado_linux/Encriptador linux/compilado_linux/instalar.sh linux/compilado_linux/desinstalar.sh
+          tar -C linux -czf dist/Encriptador-linux-x64.tar.gz compilado_linux
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-build
+          path: dist/*
+
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Compilar APK (debug)
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+        working-directory: android
+
+      - name: Empaquetar artefacto
+        run: |
+          mkdir -p dist
+          cp android/app/build/outputs/apk/debug/app-debug.apk dist/Encriptador-android.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-build
+          path: dist/*
+
+  release:
+    needs: [build-windows, build-linux, build-android]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Crear Release y adjuntar binarios
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/windows-build/*
+            artifacts/linux-build/*
+            artifacts/android-build/*
+          generate_release_notes: true
