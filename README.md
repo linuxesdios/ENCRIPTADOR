@@ -4,6 +4,8 @@
 
 **Cifra y descifra tus archivos y carpetas con AES-256-GCM, en Windows, Linux y Android.**
 
+🇪🇸 Español | 🇬🇧 [English](README.en.md)
+
 [![Licencia MIT](https://img.shields.io/badge/licencia-MIT-blue.svg)](LICENSE)
 ![Windows](https://img.shields.io/badge/Windows-0078D6?logo=windows&logoColor=white)
 ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black)
