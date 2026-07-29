@@ -1,0 +1,83 @@
+<Window x:Class="Encriptador.QuickWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Encriptador" Width="380" SizeToContent="Height"
+        WindowStyle="None" ResizeMode="NoResize" WindowStartupLocation="CenterScreen"
+        AllowsTransparency="True" Background="Transparent" Topmost="True"
+        KeyDown="Window_KeyDown">
+
+    <Border Background="{StaticResource BrushFondoCard}" BorderBrush="{StaticResource BrushBorde}"
+            BorderThickness="1" CornerRadius="18" Padding="24">
+        <StackPanel>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Border Width="36" Height="36" CornerRadius="10" Background="{StaticResource BrushAcento}">
+                    <TextBlock x:Name="Icono" Text="&#128274;" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <TextBlock x:Name="TxtTitulo" Grid.Column="1" Text="Encriptar" FontSize="16" FontWeight="Bold"
+                           Foreground="{StaticResource BrushTextoPrincipal}" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                <Button x:Name="BtnCerrar" Grid.Column="2" Content="&#10005;" Style="{StaticResource BotonIcono}"
+                        Width="26" Height="26" Click="BtnCerrar_Click"/>
+            </Grid>
+
+            <TextBlock x:Name="TxtNombre" Text="archivo.pdf" FontSize="12.5"
+                       Foreground="{StaticResource BrushTextoSecundario}" TextWrapping="Wrap"
+                       Margin="0,14,0,18"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="CONTRASEÑA" FontSize="10.5" FontWeight="SemiBold" Foreground="{StaticResource BrushTextoSecundario}" VerticalAlignment="Center"/>
+                <Button x:Name="BtnMostrarPassword" Grid.Column="1" Content="Mostrar" Style="{StaticResource BotonSecundario}"
+                        Padding="8,2" FontSize="10" Click="BtnMostrarPassword_Click"/>
+            </Grid>
+            <Grid Margin="0,6,0,0">
+                <PasswordBox x:Name="TxtPassword" Style="{StaticResource PasswordBoxModerno}" KeyDown="TxtPassword_KeyDown"
+                             PasswordChanged="TxtPassword_Changed"/>
+                <TextBox x:Name="TxtPasswordVisible" Style="{StaticResource TextBoxModerno}" Visibility="Collapsed"
+                         KeyDown="TxtPassword_KeyDown" TextChanged="TxtPasswordVisible_Changed"/>
+            </Grid>
+
+            <StackPanel x:Name="PanelModoEncriptar">
+
+                <TextBlock Text="REPETIR CONTRASEÑA" FontSize="10.5" FontWeight="SemiBold"
+                           Foreground="{StaticResource BrushTextoSecundario}" Margin="0,14,0,6"/>
+                <Grid>
+                    <PasswordBox x:Name="TxtConfirmar" Style="{StaticResource PasswordBoxModerno}" KeyDown="TxtPassword_KeyDown"/>
+                    <TextBox x:Name="TxtConfirmarVisible" Style="{StaticResource TextBoxModerno}" Visibility="Collapsed" KeyDown="TxtPassword_KeyDown"/>
+                </Grid>
+
+                <UniformGrid x:Name="PanelFuerza" Columns="4" Height="4" Margin="0,10,0,0">
+                    <Border x:Name="Segmento1" CornerRadius="2" Margin="0,0,4,0" Background="#101A2C"/>
+                    <Border x:Name="Segmento2" CornerRadius="2" Margin="0,0,4,0" Background="#101A2C"/>
+                    <Border x:Name="Segmento3" CornerRadius="2" Margin="0,0,4,0" Background="#101A2C"/>
+                    <Border x:Name="Segmento4" CornerRadius="2" Background="#101A2C"/>
+                </UniformGrid>
+                <TextBlock x:Name="TxtFuerza" Text="" FontSize="10" Margin="0,5,0,0" Foreground="{StaticResource BrushTextoSecundario}"/>
+
+                <CheckBox x:Name="ChkBorradoSeguro" Content="Borrado seguro (sobrescribir antes de borrar)" IsChecked="True"
+                          Style="{StaticResource CheckBoxModerno}" Margin="0,12,0,0"/>
+            </StackPanel>
+
+            <CheckBox x:Name="ChkConservarOriginal" Content="Conservar el archivo original"
+                      Style="{StaticResource CheckBoxModerno}" Margin="0,12,0,0"/>
+
+            <Button x:Name="BtnAccion" Content="Encriptar" Style="{StaticResource BotonAcento}"
+                    Margin="0,18,0,0" Click="BtnAccion_Click"/>
+
+            <StackPanel Orientation="Horizontal" Margin="0,14,0,0" VerticalAlignment="Top">
+                <TextBlock x:Name="IconoEstado" FontSize="13" Margin="0,0,8,0"/>
+                <TextBlock x:Name="TxtEstado" TextWrapping="Wrap" FontSize="12"
+                           Foreground="{StaticResource BrushTextoSecundario}"/>
+            </StackPanel>
+
+        </StackPanel>
+    </Border>
+</Window>

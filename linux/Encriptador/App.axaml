@@ -1,0 +1,188 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Encriptador.App"
+             RequestedThemeVariant="Dark">
+
+    <Application.Resources>
+        <Color x:Key="ColorFondo">#0F172A</Color>
+        <Color x:Key="ColorFondoCard">#1A2436</Color>
+        <Color x:Key="ColorBorde">#2A3750</Color>
+        <Color x:Key="ColorTextoPrincipal">#F1F5F9</Color>
+        <Color x:Key="ColorTextoSecundario">#94A3B8</Color>
+        <Color x:Key="ColorAcento1">#6366F1</Color>
+        <Color x:Key="ColorAcento2">#8B5CF6</Color>
+        <Color x:Key="ColorExito">#10B981</Color>
+        <Color x:Key="ColorExitoOscuro">#059669</Color>
+        <Color x:Key="ColorError">#F87171</Color>
+
+        <SolidColorBrush x:Key="BrushFondo" Color="{StaticResource ColorFondo}"/>
+        <SolidColorBrush x:Key="BrushFondoCard" Color="{StaticResource ColorFondoCard}"/>
+        <SolidColorBrush x:Key="BrushBorde" Color="{StaticResource ColorBorde}"/>
+        <SolidColorBrush x:Key="BrushTextoPrincipal" Color="{StaticResource ColorTextoPrincipal}"/>
+        <SolidColorBrush x:Key="BrushTextoSecundario" Color="{StaticResource ColorTextoSecundario}"/>
+        <SolidColorBrush x:Key="BrushExito" Color="{StaticResource ColorExito}"/>
+        <SolidColorBrush x:Key="BrushError" Color="{StaticResource ColorError}"/>
+        <SolidColorBrush x:Key="BrushAcento1Solido" Color="{StaticResource ColorAcento1}"/>
+        <SolidColorBrush x:Key="BrushCampoFondo" Color="#101A2C"/>
+
+        <LinearGradientBrush x:Key="BrushAcento" StartPoint="0%,0%" EndPoint="100%,100%">
+            <GradientStop Color="{StaticResource ColorAcento1}" Offset="0"/>
+            <GradientStop Color="{StaticResource ColorAcento2}" Offset="1"/>
+        </LinearGradientBrush>
+
+        <LinearGradientBrush x:Key="BrushExitoGradiente" StartPoint="0%,0%" EndPoint="100%,100%">
+            <GradientStop Color="{StaticResource ColorExito}" Offset="0"/>
+            <GradientStop Color="{StaticResource ColorExitoOscuro}" Offset="1"/>
+        </LinearGradientBrush>
+
+        <LinearGradientBrush x:Key="BrushFondoVentana" StartPoint="0%,0%" EndPoint="100%,100%">
+            <GradientStop Color="#0F172A" Offset="0"/>
+            <GradientStop Color="#161F33" Offset="1"/>
+        </LinearGradientBrush>
+    </Application.Resources>
+
+    <Application.Styles>
+        <FluentTheme />
+
+        <Style Selector="Window">
+            <Setter Property="FontFamily" Value="Inter,Segoe UI,sans-serif"/>
+            <Setter Property="Foreground" Value="{StaticResource BrushTextoPrincipal}"/>
+        </Style>
+
+        <!-- ===================== Botones ===================== -->
+        <Style Selector="Button.acento">
+            <Setter Property="Background" Value="{StaticResource BrushAcento}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="20,10"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Button.acento:pointerover /template/ ContentPresenter">
+            <Setter Property="Opacity" Value="0.88"/>
+        </Style>
+        <Style Selector="Button.acento:pressed /template/ ContentPresenter">
+            <Setter Property="Opacity" Value="0.72"/>
+        </Style>
+        <Style Selector="Button.acento:disabled /template/ ContentPresenter">
+            <Setter Property="Opacity" Value="0.4"/>
+        </Style>
+
+        <Style Selector="Button.exito">
+            <Setter Property="Background" Value="{StaticResource BrushExitoGradiente}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="20,10"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Button.exito:pointerover /template/ ContentPresenter">
+            <Setter Property="Opacity" Value="0.88"/>
+        </Style>
+        <Style Selector="Button.exito:pressed /template/ ContentPresenter">
+            <Setter Property="Opacity" Value="0.72"/>
+        </Style>
+        <Style Selector="Button.exito:disabled /template/ ContentPresenter">
+            <Setter Property="Opacity" Value="0.4"/>
+        </Style>
+
+        <Style Selector="Button.secundario">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource BrushTextoPrincipal}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BrushBorde}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="CornerRadius" Value="9"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Button.secundario:pointerover">
+            <Setter Property="Background" Value="#22FFFFFF"/>
+        </Style>
+        <Style Selector="Button.secundario:pressed">
+            <Setter Property="Background" Value="#33FFFFFF"/>
+        </Style>
+
+        <Style Selector="Button.icono">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource BrushTextoSecundario}"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Width" Value="30"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="CornerRadius" Value="15"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+        <Style Selector="Button.icono:pointerover">
+            <Setter Property="Background" Value="#22FFFFFF"/>
+            <Setter Property="Foreground" Value="{StaticResource BrushTextoPrincipal}"/>
+        </Style>
+
+        <!-- ===================== Campo de texto / contraseña ===================== -->
+        <Style Selector="TextBox.moderno">
+            <Setter Property="Background" Value="{StaticResource BrushCampoFondo}"/>
+            <Setter Property="Foreground" Value="{StaticResource BrushTextoPrincipal}"/>
+            <Setter Property="CaretBrush" Value="{StaticResource BrushTextoPrincipal}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BrushBorde}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12,9"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="CornerRadius" Value="9"/>
+            <Setter Property="SelectionBrush" Value="{StaticResource BrushAcento1Solido}"/>
+        </Style>
+        <Style Selector="TextBox.moderno:focus /template/ Border#PART_BorderElement">
+            <Setter Property="BorderBrush" Value="{StaticResource BrushAcento1Solido}"/>
+        </Style>
+
+        <!-- ===================== ProgressBar ===================== -->
+        <Style Selector="ProgressBar.moderna">
+            <Setter Property="Background" Value="{StaticResource BrushCampoFondo}"/>
+            <Setter Property="Foreground" Value="{StaticResource BrushAcento1Solido}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Height" Value="6"/>
+            <Setter Property="CornerRadius" Value="3"/>
+        </Style>
+
+        <!-- ===================== CheckBox ===================== -->
+        <Style Selector="CheckBox.moderno">
+            <Setter Property="Foreground" Value="{StaticResource BrushTextoSecundario}"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <Border Name="caja" Width="17" Height="17" CornerRadius="5"
+                                BorderBrush="{StaticResource BrushBorde}" BorderThickness="1.3"
+                                Background="{StaticResource BrushCampoFondo}" VerticalAlignment="Center">
+                            <TextBlock Name="marca" Text="&#10003;" FontSize="11" FontWeight="Bold"
+                                       Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       IsVisible="False"/>
+                        </Border>
+                        <ContentPresenter Name="PART_ContentPresenter" Content="{TemplateBinding Content}"
+                                           Margin="9,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="CheckBox.moderno:checked /template/ Border#caja">
+            <Setter Property="Background" Value="{StaticResource BrushAcento}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BrushAcento1Solido}"/>
+        </Style>
+        <Style Selector="CheckBox.moderno:checked /template/ TextBlock#marca">
+            <Setter Property="IsVisible" Value="True"/>
+        </Style>
+        <Style Selector="CheckBox.moderno:pointerover /template/ Border#caja">
+            <Setter Property="BorderBrush" Value="{StaticResource BrushAcento1Solido}"/>
+        </Style>
+
+    </Application.Styles>
+</Application>

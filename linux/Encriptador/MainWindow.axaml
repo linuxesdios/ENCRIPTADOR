@@ -1,0 +1,136 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        x:Class="Encriptador.MainWindow"
+        Title="Encriptador" Width="560" SizeToContent="Height"
+        MinWidth="560" CanResize="False"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource BrushFondoVentana}"
+        Icon="avares://Encriptador/Assets/icono.ico"
+        DragDrop.AllowDrop="True" DragDrop.Drop="Window_Drop" DragDrop.DragOver="Window_DragOver">
+
+    <Grid Margin="24,16,24,14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- ===================== Encabezado ===================== -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
+            <Border Width="36" Height="36" CornerRadius="10" Background="{StaticResource BrushAcento}">
+                <TextBlock Text="&#128274;" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                <TextBlock Text="Encriptador" FontSize="18" FontWeight="Bold" Foreground="{StaticResource BrushTextoPrincipal}"/>
+                <TextBlock Text="Cifrado AES-256-GCM de archivos" FontSize="11" Foreground="{StaticResource BrushTextoSecundario}"/>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- ===================== Tarjeta principal ===================== -->
+        <Border Grid.Row="1" Background="{StaticResource BrushFondoCard}" BorderBrush="{StaticResource BrushBorde}"
+                BorderThickness="1" CornerRadius="14" Padding="18" VerticalAlignment="Top">
+            <StackPanel>
+
+                <TextBlock Text="ARCHIVO" FontSize="10.5" FontWeight="SemiBold" Foreground="{StaticResource BrushTextoSecundario}" Margin="2,0,0,6"/>
+
+                <!-- Zona de arrastrar y soltar / seleccionar archivo(s) -->
+                <Border x:Name="ZonaArchivo" MinHeight="68" CornerRadius="10" Background="#101A2C"
+                        BorderBrush="{StaticResource BrushBorde}" BorderThickness="1.5" Cursor="Hand"
+                        PointerPressed="ZonaArchivo_PointerPressed" PointerEntered="ZonaArchivo_PointerEntered" PointerExited="ZonaArchivo_PointerExited">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="12,10">
+                        <TextBlock x:Name="IconoArchivo" Text="&#128193;" FontSize="18" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock x:Name="TxtNombreArchivo" Text="Arrastrá archivo(s) o una carpeta aquí, o hacé clic para elegir"
+                                   FontSize="12.5" Foreground="{StaticResource BrushTextoSecundario}"
+                                   VerticalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="400"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Contraseña -->
+                <Grid Margin="2,12,0,6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="CONTRASEÑA" FontSize="10.5" FontWeight="SemiBold" Foreground="{StaticResource BrushTextoSecundario}" VerticalAlignment="Center"/>
+                    <Button x:Name="BtnMostrarPassword" Grid.Column="1" Content="Mostrar" Classes="secundario"
+                            Padding="9,2" FontSize="10" Click="BtnMostrarPassword_Click"/>
+                </Grid>
+                <TextBox x:Name="TxtPassword" Classes="moderno" PasswordChar="●"
+                         TextChanged="TxtPassword_Changed" KeyDown="Password_KeyDown"/>
+
+                <!-- Contenido exclusivo del modo "encriptar" -->
+                <StackPanel x:Name="PanelModoEncriptar">
+
+                    <TextBlock Text="REPETIR CONTRASEÑA" FontSize="10.5" FontWeight="SemiBold"
+                               Foreground="{StaticResource BrushTextoSecundario}" Margin="2,10,0,6"/>
+                    <TextBox x:Name="TxtConfirmar" Classes="moderno" PasswordChar="●" KeyDown="Password_KeyDown"/>
+
+                    <Grid Margin="2,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <UniformGrid x:Name="PanelFuerza" Columns="4" Height="4" VerticalAlignment="Center">
+                            <Border x:Name="Segmento1" CornerRadius="2" Margin="0,0,4,0" Background="#101A2C"/>
+                            <Border x:Name="Segmento2" CornerRadius="2" Margin="0,0,4,0" Background="#101A2C"/>
+                            <Border x:Name="Segmento3" CornerRadius="2" Margin="0,0,4,0" Background="#101A2C"/>
+                            <Border x:Name="Segmento4" CornerRadius="2" Background="#101A2C"/>
+                        </UniformGrid>
+                        <TextBlock x:Name="TxtFuerza" Grid.Column="1" Text="" FontSize="10" Margin="8,0,0,0"
+                                   Foreground="{StaticResource BrushTextoSecundario}" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <CheckBox x:Name="ChkBorradoSeguro" Content="Borrado seguro (sobrescribir antes de borrar)" IsChecked="True"
+                              Classes="moderno" Margin="2,10,0,0"/>
+                </StackPanel>
+
+                <CheckBox x:Name="ChkConservarOriginal" Content="Conservar el archivo original (no borrarlo al terminar)"
+                          Classes="moderno" Margin="2,10,0,0"
+                          IsCheckedChanged="ChkConservarOriginal_Changed"/>
+
+                <Grid Margin="0,14,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="BtnEncriptar" Grid.Column="0" Content="&#128272;  Encriptar" Classes="acento" Click="BtnEncriptar_Click"/>
+                    <Button x:Name="BtnDesencriptar" Grid.Column="2" Content="&#128273;  Desencriptar" Classes="exito" Click="BtnDesencriptar_Click"/>
+                </Grid>
+
+                <ProgressBar x:Name="BarraProgreso" Classes="moderna" Margin="0,12,0,0"/>
+
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0" VerticalAlignment="Center">
+                    <TextBlock x:Name="IconoEstado" Text="" FontSize="13" Margin="0,0,7,0" VerticalAlignment="Top"/>
+                    <TextBlock x:Name="TxtEstado" TextWrapping="Wrap" FontSize="11.5"
+                               Foreground="{StaticResource BrushTextoSecundario}" VerticalAlignment="Center"/>
+                </StackPanel>
+
+            </StackPanel>
+        </Border>
+
+        <!-- ===================== Pie / créditos ===================== -->
+        <Grid Grid.Row="2" Margin="4,10,4,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Width="22" Height="22" CornerRadius="11" ClipToBounds="True">
+                <Image Source="avares://Encriptador/Assets/Autor.jpg" Stretch="UniformToFill" Width="22" Height="22"/>
+            </Border>
+
+            <TextBlock Grid.Column="1" Text="Realizado por Pablo Martín Fernández"
+                       FontSize="10.5" Foreground="{StaticResource BrushTextoSecundario}"
+                       VerticalAlignment="Center" Margin="8,0,0,0"/>
+
+            <Button x:Name="BtnAcerca" Grid.Column="2" Content="&#8505;" Classes="icono"
+                    ToolTip.Tip="Acerca de" Click="BtnAcerca_Click"/>
+        </Grid>
+
+    </Grid>
+</Window>

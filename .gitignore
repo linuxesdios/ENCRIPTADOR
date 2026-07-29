@@ -1,0 +1,34 @@
+# Carpeta de la app Python original (no se distribuye en este repo)
+/python/
+
+# Herramienta local de backup/versionado (no relacionada con git)
+/.mivcs/
+
+# .NET (Windows / Linux)
+bin/
+obj/
+*.user
+local.properties
+
+# Salidas de compilacion (binarios, se generan con los .bat de cada carpeta)
+/windows/compilado/
+/windows/salida_instalador/
+/linux/compilado_windows/
+/linux/compilado_linux/Encriptador
+/linux/compilado_linux/Encriptador.pdb
+/linux/compilado_linux/*.pdb
+
+# Android / Gradle
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/compilado_android/*.apk
+android/*.iml
+android/.idea/
+
+# Editores / SO
+.vs/
+.vscode/
+Thumbs.db
+.DS_Store

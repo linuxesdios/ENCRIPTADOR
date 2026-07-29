@@ -1,0 +1,248 @@
+<Application x:Class="Encriptador.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Encriptador">
+    <Application.Resources>
+        <ResourceDictionary>
+
+            <!-- ===================== Paleta de colores ===================== -->
+            <Color x:Key="ColorFondo">#0F172A</Color>
+            <Color x:Key="ColorFondoCard">#1A2436</Color>
+            <Color x:Key="ColorBorde">#2A3750</Color>
+            <Color x:Key="ColorTextoPrincipal">#F1F5F9</Color>
+            <Color x:Key="ColorTextoSecundario">#94A3B8</Color>
+            <Color x:Key="ColorAcento1">#6366F1</Color>
+            <Color x:Key="ColorAcento2">#8B5CF6</Color>
+            <Color x:Key="ColorExito">#10B981</Color>
+            <Color x:Key="ColorExitoOscuro">#059669</Color>
+            <Color x:Key="ColorError">#F87171</Color>
+
+            <SolidColorBrush x:Key="BrushFondo" Color="{StaticResource ColorFondo}"/>
+            <SolidColorBrush x:Key="BrushFondoCard" Color="{StaticResource ColorFondoCard}"/>
+            <SolidColorBrush x:Key="BrushBorde" Color="{StaticResource ColorBorde}"/>
+            <SolidColorBrush x:Key="BrushTextoPrincipal" Color="{StaticResource ColorTextoPrincipal}"/>
+            <SolidColorBrush x:Key="BrushTextoSecundario" Color="{StaticResource ColorTextoSecundario}"/>
+            <SolidColorBrush x:Key="BrushExito" Color="{StaticResource ColorExito}"/>
+            <SolidColorBrush x:Key="BrushError" Color="{StaticResource ColorError}"/>
+            <SolidColorBrush x:Key="BrushAcento1Solido" Color="{StaticResource ColorAcento1}"/>
+
+            <LinearGradientBrush x:Key="BrushAcento" StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="{StaticResource ColorAcento1}" Offset="0"/>
+                <GradientStop Color="{StaticResource ColorAcento2}" Offset="1"/>
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="BrushExitoGradiente" StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="{StaticResource ColorExito}" Offset="0"/>
+                <GradientStop Color="{StaticResource ColorExitoOscuro}" Offset="1"/>
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="BrushFondoVentana" StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#0F172A" Offset="0"/>
+                <GradientStop Color="#161F33" Offset="1"/>
+            </LinearGradientBrush>
+
+            <!-- ===================== Tipografía base ===================== -->
+            <Style TargetType="{x:Type Window}">
+                <Setter Property="FontFamily" Value="Segoe UI"/>
+                <Setter Property="TextElement.Foreground" Value="{StaticResource BrushTextoPrincipal}"/>
+            </Style>
+
+            <!-- ===================== Botón moderno con gradiente ===================== -->
+            <Style x:Key="BotonAcento" TargetType="Button">
+                <Setter Property="Background" Value="{StaticResource BrushAcento}"/>
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Padding" Value="20,10"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="border" Background="{TemplateBinding Background}"
+                                    CornerRadius="10" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="border" Property="Opacity" Value="0.88"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="border" Property="Opacity" Value="0.72"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter TargetName="border" Property="Opacity" Value="0.4"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="BotonExito" TargetType="Button" BasedOn="{StaticResource BotonAcento}">
+                <Setter Property="Background" Value="{StaticResource BrushExitoGradiente}"/>
+            </Style>
+
+            <!-- Botón secundario (contorno, sin relleno) -->
+            <Style x:Key="BotonSecundario" TargetType="Button">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="{StaticResource BrushTextoPrincipal}"/>
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="BorderBrush" Value="{StaticResource BrushBorde}"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Padding" Value="14,8"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="border" Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="9" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="border" Property="Background" Value="#22FFFFFF"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="border" Property="Background" Value="#33FFFFFF"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- Botón "ícono" circular chico (usado para el de "Acerca de") -->
+            <Style x:Key="BotonIcono" TargetType="Button">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="{StaticResource BrushTextoSecundario}"/>
+                <Setter Property="FontSize" Value="15"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Width" Value="30"/>
+                <Setter Property="Height" Value="30"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="15">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="border" Property="Background" Value="#22FFFFFF"/>
+                                    <Setter Property="Foreground" Value="{StaticResource BrushTextoPrincipal}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- ===================== TextBox / PasswordBox modernos ===================== -->
+            <Style x:Key="CampoModerno" TargetType="Control">
+                <Setter Property="Background" Value="#101A2C"/>
+                <Setter Property="Foreground" Value="{StaticResource BrushTextoPrincipal}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource BrushBorde}"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Padding" Value="12,9"/>
+                <Setter Property="FontSize" Value="14"/>
+            </Style>
+
+            <Style x:Key="TextBoxModerno" TargetType="TextBox" BasedOn="{StaticResource CampoModerno}">
+                <Setter Property="CaretBrush" Value="{StaticResource BrushTextoPrincipal}"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="TextBox">
+                            <Border x:Name="border" Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="9">
+                                <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsFocused" Value="True">
+                                    <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource BrushAcento1Solido}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="PasswordBoxModerno" TargetType="PasswordBox" BasedOn="{StaticResource CampoModerno}">
+                <Setter Property="PasswordChar" Value="●"/>
+                <Setter Property="CaretBrush" Value="{StaticResource BrushTextoPrincipal}"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="PasswordBox">
+                            <Border x:Name="border" Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="9">
+                                <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsFocused" Value="True">
+                                    <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource BrushAcento1Solido}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- ===================== ProgressBar moderna ===================== -->
+            <Style x:Key="BarraModerna" TargetType="ProgressBar">
+                <Setter Property="Background" Value="#101A2C"/>
+                <Setter Property="Foreground" Value="{StaticResource BrushAcento1Solido}"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Height" Value="6"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ProgressBar">
+                            <Border Background="{TemplateBinding Background}" CornerRadius="3">
+                                <Grid ClipToBounds="True">
+                                    <Border x:Name="PART_Track" CornerRadius="3"/>
+                                    <Border x:Name="PART_Indicator" Background="{StaticResource BrushAcento}"
+                                            CornerRadius="3" HorizontalAlignment="Left"/>
+                                </Grid>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- ===================== CheckBox moderno ===================== -->
+            <Style x:Key="CheckBoxModerno" TargetType="CheckBox">
+                <Setter Property="Foreground" Value="{StaticResource BrushTextoSecundario}"/>
+                <Setter Property="FontSize" Value="12.5"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="CheckBox">
+                            <StackPanel Orientation="Horizontal">
+                                <Border x:Name="caja" Width="17" Height="17" CornerRadius="5"
+                                        BorderBrush="{StaticResource BrushBorde}" BorderThickness="1.3"
+                                        Background="#101A2C" VerticalAlignment="Center">
+                                    <TextBlock x:Name="marca" Text="&#10003;" FontSize="11" FontWeight="Bold"
+                                               Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Visibility="Collapsed"/>
+                                </Border>
+                                <ContentPresenter Margin="9,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="caja" Property="Background" Value="{StaticResource BrushAcento}"/>
+                                    <Setter TargetName="caja" Property="BorderBrush" Value="{StaticResource BrushAcento1Solido}"/>
+                                    <Setter TargetName="marca" Property="Visibility" Value="Visible"/>
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="caja" Property="BorderBrush" Value="{StaticResource BrushAcento1Solido}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
