@@ -4,7 +4,7 @@
 
 **Cifra y descifra tus archivos y carpetas con AES-256-GCM, en Windows, Linux y Android.**
 
-🇪🇸 Español | 🇬🇧 [English](README.en.md)
+🇪🇸 Español | 🇬🇧 [English](README.en.md) | 🇷🇺 [Русский](README.ru.md) | 🇨🇳 [中文](README.zh.md)
 
 [![Licencia MIT](https://img.shields.io/badge/licencia-MIT-blue.svg)](LICENSE)
 ![Windows](https://img.shields.io/badge/Windows-0078D6?logo=windows&logoColor=white)
@@ -24,6 +24,7 @@
 - **Explorador integrado**: navega y extrae archivos individuales de una carpeta cifrada sin descifrar todo el contenido.
 - Medidor de fortaleza de contraseña, confirmación de contraseña, mostrar/ocultar, progreso real por archivo.
 - **Integración con el sistema**: clic derecho → "Encriptar con Encriptador", y doble clic / "Abrir con" sobre archivos `.enc` (Windows, Linux/MATE y Android).
+- **Selector de idioma** (Español / English / Русский / 中文) en las tres plataformas, con detección automática del idioma del sistema la primera vez.
 - Misma interfaz oscura y el mismo formato de archivo `.enc` en las tres plataformas.
 
 ## 📦 Descargar

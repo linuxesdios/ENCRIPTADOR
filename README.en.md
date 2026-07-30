@@ -4,7 +4,7 @@
 
 **Encrypt and decrypt your files and folders with AES-256-GCM, on Windows, Linux and Android.**
 
-🇬🇧 English | 🇪🇸 [Español](README.md)
+🇬🇧 English | 🇪🇸 [Español](README.md) | 🇷🇺 [Русский](README.ru.md) | 🇨🇳 [中文](README.zh.md)
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Windows](https://img.shields.io/badge/Windows-0078D6?logo=windows&logoColor=white)
@@ -24,6 +24,7 @@
 - **Built-in explorer**: browse and extract individual files from an encrypted folder without decrypting everything.
 - Password strength meter, password confirmation, show/hide toggle, real per-file progress.
 - **OS integration**: right-click → "Encrypt with Encriptador", and double-click / "Open with" on `.enc` files (Windows, Linux/MATE and Android).
+- **Language selector** (Español / English / Русский / 中文) on all three platforms, with automatic system-language detection on first run.
 - Same dark UI and the same `.enc` file format across all three platforms.
 
 ## 📦 Download
