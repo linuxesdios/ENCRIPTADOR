@@ -41,10 +41,10 @@ public static class PasswordStrengthHelper
 
     public static string Texto(Nivel nivel) => nivel switch
     {
-        Nivel.MuyDebil => "Muy débil",
-        Nivel.Debil => "Débil",
-        Nivel.Media => "Media",
-        Nivel.Fuerte => "Fuerte",
-        _ => "Muy fuerte",
+        Nivel.MuyDebil => Loc.T("strength.muyDebil"),
+        Nivel.Debil => Loc.T("strength.debil"),
+        Nivel.Media => Loc.T("strength.media"),
+        Nivel.Fuerte => Loc.T("strength.fuerte"),
+        _ => Loc.T("strength.muyFuerte"),
     };
 }

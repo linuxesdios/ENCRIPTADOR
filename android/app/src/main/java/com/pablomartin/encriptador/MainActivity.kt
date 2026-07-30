@@ -43,6 +43,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        Preferencias.inicializar(this)
+        Localization.inicializar(Preferencias.cargarIdioma())
+
         // "Abrir con" / doble tap sobre un .enc desde el explorador de archivos del teléfono.
         val uriInicial: Uri? = intent?.takeIf { it.action == Intent.ACTION_VIEW }?.data
 
@@ -112,7 +115,7 @@ private fun PantallaPrincipal(uriInicial: Uri?) {
     }
     val lanzadorCarpeta = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri != null) {
-            val nombre = DocumentFile.fromTreeUri(context, uri)?.name ?: "carpeta"
+            val nombre = DocumentFile.fromTreeUri(context, uri)?.name ?: Localization.t("pantalla.nombreFallbackCarpeta")
             limpiarSeleccion(Seleccion.Carpeta(uri, nombre))
         }
     }
@@ -143,14 +146,14 @@ private fun PantallaPrincipal(uriInicial: Uri?) {
 
     fun ejecutarEncriptar() {
         val sel = seleccion
-        if (password.isEmpty()) { mostrar("Ingresá una contraseña.", TipoEstado.ERROR); return }
-        if (password != confirmar) { mostrar("Las contraseñas no coinciden.", TipoEstado.ERROR); return }
-        if (sel is Seleccion.Ninguna) { mostrar("Seleccioná archivo(s) o una carpeta.", TipoEstado.ERROR); return }
+        if (password.isEmpty()) { mostrar(Localization.t("common.estado.passwordRequerida"), TipoEstado.ERROR); return }
+        if (password != confirmar) { mostrar(Localization.t("common.estado.passwordsNoCoinciden"), TipoEstado.ERROR); return }
+        if (sel is Seleccion.Ninguna) { mostrar(Localization.t("pantalla.sinSeleccion"), TipoEstado.ERROR); return }
 
         scope.launch {
             procesando = true
             progreso = null
-            mostrar("Elegí dónde guardar el .enc...", TipoEstado.INFO)
+            mostrar(Localization.t("pantalla.elegirDondeGuardar"), TipoEstado.INFO)
             try {
                 when (sel) {
                     is Seleccion.Archivos -> {
@@ -167,9 +170,9 @@ private fun PantallaPrincipal(uriInicial: Uri?) {
                                 }
                                 if (!conservarOriginal) borrarUri(context, uri)
                             }
-                            mostrar("Archivo encriptado correctamente.", TipoEstado.EXITO)
+                            mostrar(Localization.t("common.estado.archivoEncriptado"), TipoEstado.EXITO)
                         } else {
-                            val destinoUri = pedirDestino("${sel.uris.size} archivos.enc") ?: run { procesando = false; return@launch }
+                            val destinoUri = pedirDestino(Localization.t("pantalla.variosArchivosEnc", sel.uris.size)) ?: run { procesando = false; return@launch }
                             withContext(Dispatchers.IO) {
                                 val fuentes = sel.uris.mapIndexed { i, uri ->
                                     CryptoService.FuenteArchivo(sel.nombres[i], tamanoDeUri(context, uri)) {
@@ -181,13 +184,13 @@ private fun PantallaPrincipal(uriInicial: Uri?) {
                                 }
                                 if (!conservarOriginal) sel.uris.forEach { borrarUri(context, it) }
                             }
-                            mostrar("${sel.uris.size} archivos encriptados en un solo paquete.", TipoEstado.EXITO)
+                            mostrar(Localization.t("pantalla.variosEncriptados", sel.uris.size), TipoEstado.EXITO)
                         }
                     }
 
                     is Seleccion.Carpeta -> {
                         val raiz = DocumentFile.fromTreeUri(context, sel.treeUri)
-                            ?: throw IllegalStateException("No se pudo abrir la carpeta.")
+                            ?: throw IllegalStateException(Localization.t("pantalla.noSePudoAbrirCarpeta"))
                         val destinoUri = pedirDestino("${sel.nombre}.enc") ?: run { procesando = false; return@launch }
                         withContext(Dispatchers.IO) {
                             val archivos = ArrayList<Pair<String, DocumentFile>>()
@@ -200,13 +203,13 @@ private fun PantallaPrincipal(uriInicial: Uri?) {
                             }
                             if (!conservarOriginal) raiz.delete()
                         }
-                        mostrar("Carpeta encriptada en un solo archivo.", TipoEstado.EXITO)
+                        mostrar(Localization.t("pantalla.carpetaEncriptadaUnArchivo"), TipoEstado.EXITO)
                     }
 
                     Seleccion.Ninguna -> Unit
                 }
             } catch (ex: Exception) {
-                mostrar("Error: ${ex.message}", TipoEstado.ERROR)
+                mostrar(Localization.t("common.estado.error", ex.message ?: ""), TipoEstado.ERROR)
             } finally {
                 procesando = false
                 progreso = null
@@ -217,14 +220,14 @@ private fun PantallaPrincipal(uriInicial: Uri?) {
     fun ejecutarDesencriptar() {
         val sel = seleccion
         if (sel !is Seleccion.Archivos || sel.uris.size != 1) {
-            mostrar("Seleccioná un solo archivo .enc.", TipoEstado.ERROR); return
+            mostrar(Localization.t("pantalla.soloUnArchivoEnc"), TipoEstado.ERROR); return
         }
-        if (password.isEmpty()) { mostrar("Ingresá una contraseña.", TipoEstado.ERROR); return }
+        if (password.isEmpty()) { mostrar(Localization.t("common.estado.passwordRequerida"), TipoEstado.ERROR); return }
 
         val uri = sel.uris[0]
         scope.launch {
             procesando = true
-            mostrar("Verificando contraseña...", TipoEstado.INFO)
+            mostrar(Localization.t("common.estado.verificandoPassword"), TipoEstado.INFO)
             try {
                 val esCarpeta = withContext(Dispatchers.IO) {
                     resolver.openInputStream(uri)!!.use { CryptoService.esContenedorDeCarpeta(it) }
@@ -241,19 +244,19 @@ private fun PantallaPrincipal(uriInicial: Uri?) {
                         }
                         if (!conservarOriginal) borrarUri(context, uri)
                     }
-                    mostrar("Archivo desencriptado correctamente.", TipoEstado.EXITO)
+                    mostrar(Localization.t("common.estado.archivoDesencriptado"), TipoEstado.EXITO)
                 } else {
                     val sesion = withContext(Dispatchers.IO) {
                         resolver.openInputStream(uri)!!.use { CryptoService.abrirCarpeta(it, password) }
                     }
                     sesionPendiente = sesion
                     uriPendiente = uri
-                    mostrar("Carpeta con ${sesion.entradas.size} archivo(s). Elegí dónde extraerla.", TipoEstado.INFO)
+                    mostrar(Localization.t("pantalla.carpetaConArchivos", sesion.entradas.size), TipoEstado.INFO)
                 }
             } catch (ex: GeneralSecurityException) {
-                mostrar("Contraseña incorrecta o archivo dañado.", TipoEstado.ERROR)
+                mostrar(Localization.t("crypto.archivoDanado"), TipoEstado.ERROR)
             } catch (ex: Exception) {
-                mostrar("Error: ${ex.message}", TipoEstado.ERROR)
+                mostrar(Localization.t("common.estado.error", ex.message ?: ""), TipoEstado.ERROR)
             } finally {
                 procesando = false
             }
@@ -266,10 +269,10 @@ private fun PantallaPrincipal(uriInicial: Uri?) {
         if (destinoTreeUri != null && sesion != null && uriEnc != null) {
             scope.launch {
                 procesando = true
-                mostrar("Extrayendo...", TipoEstado.INFO)
+                mostrar(Localization.t("pantalla.extrayendo"), TipoEstado.INFO)
                 try {
                     val raizDestino = DocumentFile.fromTreeUri(context, destinoTreeUri)
-                        ?: throw IllegalStateException("No se pudo abrir el destino.")
+                        ?: throw IllegalStateException(Localization.t("pantalla.noSePudoAbrirDestino"))
                     withContext(Dispatchers.IO) {
                         CryptoService.extraerTodo(
                             reabrirEntrada = { resolver.openInputStream(uriEnc)!! },
@@ -282,9 +285,9 @@ private fun PantallaPrincipal(uriInicial: Uri?) {
                         )
                         if (!conservarOriginal) borrarUri(context, uriEnc)
                     }
-                    mostrar("Carpeta restaurada: ${sesion.entradas.size} archivo(s).", TipoEstado.EXITO)
+                    mostrar(Localization.t("pantalla.carpetaRestaurada", sesion.entradas.size), TipoEstado.EXITO)
                 } catch (ex: Exception) {
-                    mostrar("Error al extraer: ${ex.message}", TipoEstado.ERROR)
+                    mostrar(Localization.t("pantalla.errorAlExtraer", ex.message ?: ""), TipoEstado.ERROR)
                 } finally {
                     procesando = false
                     progreso = null
@@ -311,10 +314,11 @@ private fun PantallaPrincipal(uriInicial: Uri?) {
                 contentAlignment = Alignment.Center,
             ) { Text("🔒", fontSize = 18.sp) }
             Spacer(Modifier.width(12.dp))
-            Column {
+            Column(Modifier.weight(1f)) {
                 Text("Encriptador", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = ColorTextoPrincipal)
-                Text("Cifrado AES-256-GCM de archivos", fontSize = 11.sp, color = ColorTextoSecundario)
+                Text(Localization.t("pantalla.tagline"), fontSize = 11.sp, color = ColorTextoSecundario)
             }
+            SelectorIdioma()
         }
 
         Card(
@@ -324,21 +328,21 @@ private fun PantallaPrincipal(uriInicial: Uri?) {
         ) {
             Column(Modifier.padding(18.dp)) {
 
-                Etiqueta("ARCHIVO O CARPETA")
+                Etiqueta(Localization.t("pantalla.archivoOCarpeta"))
                 Row(Modifier.padding(top = 6.dp, bottom = 4.dp)) {
-                    BotonSecundario("📄 Archivo(s)", Modifier.weight(1f)) {
+                    BotonSecundario(Localization.t("pantalla.btnArchivos"), Modifier.weight(1f)) {
                         lanzadorArchivos.launch(arrayOf("*/*"))
                     }
                     Spacer(Modifier.width(8.dp))
-                    BotonSecundario("📁 Carpeta", Modifier.weight(1f)) {
+                    BotonSecundario(Localization.t("pantalla.btnCarpeta"), Modifier.weight(1f)) {
                         lanzadorCarpeta.launch(null)
                     }
                 }
                 Text(
                     text = when (val sel = seleccion) {
-                        is Seleccion.Ninguna -> "Nada seleccionado"
-                        is Seleccion.Archivos -> if (sel.uris.size == 1) sel.nombres[0] else "${sel.uris.size} archivos seleccionados"
-                        is Seleccion.Carpeta -> "Carpeta: ${sel.nombre}"
+                        is Seleccion.Ninguna -> Localization.t("pantalla.nadaSeleccionado")
+                        is Seleccion.Archivos -> if (sel.uris.size == 1) sel.nombres[0] else Localization.t("pantalla.variosSeleccionados", sel.uris.size)
+                        is Seleccion.Carpeta -> Localization.t("pantalla.carpetaSeleccionada", sel.nombre)
                     },
                     fontSize = 12.5.sp,
                     color = ColorTextoSecundario,
@@ -346,8 +350,8 @@ private fun PantallaPrincipal(uriInicial: Uri?) {
                 )
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Etiqueta("CONTRASEÑA", Modifier.weight(1f))
-                    BotonSecundario(if (mostrarPassword) "Ocultar" else "Mostrar", chico = true) {
+                    Etiqueta(Localization.t("common.contrasena"), Modifier.weight(1f))
+                    BotonSecundario(Localization.t(if (mostrarPassword) "common.ocultar" else "common.mostrar"), chico = true) {
                         mostrarPassword = !mostrarPassword
                     }
                 }
@@ -355,7 +359,7 @@ private fun PantallaPrincipal(uriInicial: Uri?) {
                 CampoPassword(password, { password = it }, mostrarPassword)
 
                 if (esModoEncriptar) {
-                    Etiqueta("REPETIR CONTRASEÑA", Modifier.padding(top = 14.dp, bottom = 6.dp))
+                    Etiqueta(Localization.t("common.repetirContrasena"), Modifier.padding(top = 14.dp, bottom = 6.dp))
                     CampoPassword(confirmar, { confirmar = it }, mostrarPassword)
 
                     val nivel = PasswordStrength.evaluar(password)
@@ -385,21 +389,21 @@ private fun PantallaPrincipal(uriInicial: Uri?) {
                 ) {
                     Checkbox(checked = conservarOriginal, onCheckedChange = { conservarOriginal = it })
                     Text(
-                        if (esModoEncriptar) "Conservar el original (no borrarlo al terminar)" else "Conservar el .enc (no borrarlo al terminar)",
+                        Localization.t(if (esModoEncriptar) "pantalla.conservarOriginal" else "pantalla.conservarEnc"),
                         fontSize = 12.sp, color = ColorTextoSecundario,
                     )
                 }
 
                 Spacer(Modifier.height(16.dp))
                 Row {
-                    BotonPrimario("🔒 Encriptar", Modifier.weight(1f), BrushAcento(), habilitado = !procesando) { ejecutarEncriptar() }
+                    BotonPrimario(Localization.t("pantalla.btnEncriptar"), Modifier.weight(1f), BrushAcento(), habilitado = !procesando) { ejecutarEncriptar() }
                     Spacer(Modifier.width(10.dp))
-                    BotonPrimario("🔑 Desencriptar", Modifier.weight(1f), BrushExito(), habilitado = !procesando) { ejecutarDesencriptar() }
+                    BotonPrimario(Localization.t("pantalla.btnDesencriptar"), Modifier.weight(1f), BrushExito(), habilitado = !procesando) { ejecutarDesencriptar() }
                 }
 
                 if (sesionPendiente != null) {
                     Spacer(Modifier.height(12.dp))
-                    BotonPrimario("📂 Elegir carpeta destino y extraer", Modifier.fillMaxWidth(), BrushAcento(), habilitado = !procesando) {
+                    BotonPrimario(Localization.t("pantalla.btnElegirCarpetaDestino"), Modifier.fillMaxWidth(), BrushAcento(), habilitado = !procesando) {
                         lanzadorDestinoCarpeta.launch(null)
                     }
                 }
@@ -413,7 +417,7 @@ private fun PantallaPrincipal(uriInicial: Uri?) {
                             modifier = Modifier.fillMaxWidth(),
                             color = ColorAcento1, trackColor = ColorFondoCampo,
                         )
-                        Text("Archivo ${p.first} de ${p.second}", fontSize = 11.sp, color = ColorTextoSecundario, modifier = Modifier.padding(top = 6.dp))
+                        Text(Localization.t("pantalla.progresoArchivo", p.first, p.second), fontSize = 11.sp, color = ColorTextoSecundario, modifier = Modifier.padding(top = 6.dp))
                     } else {
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = ColorAcento1, trackColor = ColorFondoCampo)
                     }
@@ -435,7 +439,7 @@ private fun PantallaPrincipal(uriInicial: Uri?) {
 
         Spacer(Modifier.height(16.dp))
         Text(
-            "Realizado por Pablo Martín Fernández",
+            Localization.t("common.footer.credito", "Pablo Martín Fernández"),
             fontSize = 10.5.sp, color = ColorTextoSecundario,
             modifier = Modifier.padding(start = 4.dp),
         )
@@ -443,6 +447,23 @@ private fun PantallaPrincipal(uriInicial: Uri?) {
 }
 
 // ===================== Componentes reutilizables =====================
+
+@Composable
+private fun SelectorIdioma() {
+    Row {
+        listOf(Idioma.ES to "ES", Idioma.EN to "EN", Idioma.RU to "RU", Idioma.ZH to "中").forEach { (idioma, etiqueta) ->
+            val activo = Localization.idiomaActual == idioma
+            Box(
+                Modifier
+                    .padding(start = 4.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(if (activo) ColorAcento1 else Color.Transparent)
+                    .clickable { Localization.cambiarIdioma(idioma) }
+                    .padding(horizontal = 7.dp, vertical = 4.dp),
+            ) { Text(etiqueta, fontSize = 10.sp, color = if (activo) Color.White else ColorTextoSecundario) }
+        }
+    }
+}
 
 @Composable
 private fun Etiqueta(texto: String, modifier: Modifier = Modifier) {
@@ -513,10 +534,10 @@ private fun nombreDeUri(context: android.content.Context, uri: Uri): String {
     context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c ->
         if (c.moveToFirst()) {
             val idx = c.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-            if (idx >= 0) return c.getString(idx) ?: "archivo"
+            if (idx >= 0) return c.getString(idx) ?: Localization.t("pantalla.nombreFallbackArchivo")
         }
     }
-    return DocumentFile.fromSingleUri(context, uri)?.name ?: "archivo"
+    return DocumentFile.fromSingleUri(context, uri)?.name ?: Localization.t("pantalla.nombreFallbackArchivo")
 }
 
 private fun tamanoDeUri(context: android.content.Context, uri: Uri): Long {
@@ -555,9 +576,9 @@ private fun crearEnArbol(raiz: DocumentFile, rutaRelativa: String): DocumentFile
     var actual = raiz
     for (i in 0 until partes.size - 1) {
         actual = actual.findFile(partes[i]) ?: actual.createDirectory(partes[i])
-            ?: throw IllegalStateException("No se pudo crear la carpeta '${partes[i]}'.")
+            ?: throw IllegalStateException(Localization.t("pantalla.noSePudoCrearCarpeta", partes[i]))
     }
     val nombreArchivo = partes.last()
     return actual.createFile("application/octet-stream", nombreArchivo)
-        ?: throw IllegalStateException("No se pudo crear el archivo '$nombreArchivo'.")
+        ?: throw IllegalStateException(Localization.t("pantalla.noSePudoCrearArchivo", nombreArchivo))
 }

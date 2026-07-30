@@ -25,16 +25,23 @@
                         Width="26" Height="26" Click="BtnCerrar_Click"/>
             </Grid>
 
+            <StackPanel x:Name="PanelIdioma" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                <Button x:Name="BtnIdiomaEs" Content="ES" Style="{StaticResource BotonSecundario}" Padding="5,2" FontSize="9" Margin="0,0,4,0" Click="BtnIdioma_Click"/>
+                <Button x:Name="BtnIdiomaEn" Content="EN" Style="{StaticResource BotonSecundario}" Padding="5,2" FontSize="9" Margin="0,0,4,0" Click="BtnIdioma_Click"/>
+                <Button x:Name="BtnIdiomaRu" Content="RU" Style="{StaticResource BotonSecundario}" Padding="5,2" FontSize="9" Margin="0,0,4,0" Click="BtnIdioma_Click"/>
+                <Button x:Name="BtnIdiomaZh" Content="中" Style="{StaticResource BotonSecundario}" Padding="5,2" FontSize="9" Click="BtnIdioma_Click"/>
+            </StackPanel>
+
             <TextBlock x:Name="TxtNombre" Text="archivo.pdf" FontSize="12.5"
                        Foreground="{StaticResource BrushTextoSecundario}" TextWrapping="Wrap"
-                       Margin="0,14,0,18"/>
+                       Margin="0,10,0,18"/>
 
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Text="CONTRASEÑA" FontSize="10.5" FontWeight="SemiBold" Foreground="{StaticResource BrushTextoSecundario}" VerticalAlignment="Center"/>
+                <TextBlock x:Name="LblContrasena" Text="CONTRASEÑA" FontSize="10.5" FontWeight="SemiBold" Foreground="{StaticResource BrushTextoSecundario}" VerticalAlignment="Center"/>
                 <Button x:Name="BtnMostrarPassword" Grid.Column="1" Content="Mostrar" Style="{StaticResource BotonSecundario}"
                         Padding="8,2" FontSize="10" Click="BtnMostrarPassword_Click"/>
             </Grid>
@@ -47,7 +54,7 @@
 
             <StackPanel x:Name="PanelModoEncriptar">
 
-                <TextBlock Text="REPETIR CONTRASEÑA" FontSize="10.5" FontWeight="SemiBold"
+                <TextBlock x:Name="LblRepetir" Text="REPETIR CONTRASEÑA" FontSize="10.5" FontWeight="SemiBold"
                            Foreground="{StaticResource BrushTextoSecundario}" Margin="0,14,0,6"/>
                 <Grid>
                     <PasswordBox x:Name="TxtConfirmar" Style="{StaticResource PasswordBoxModerno}" KeyDown="TxtPassword_KeyDown"/>

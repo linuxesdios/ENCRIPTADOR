@@ -38,9 +38,15 @@ public partial class ExplorerWindow : Window
         InitializeComponent();
         _sesion = sesion;
 
+        Title = Loc.T("explorer.titulo");
         TxtTitulo.Text = nombreOrigen;
+        TxtInstrucciones.Text = Loc.T("explorer.instrucciones");
+        BtnSeleccionarTodo.Content = Loc.T("explorer.btn.seleccionarTodo");
+        BtnDeseleccionarTodo.Content = Loc.T("explorer.btn.deseleccionarTodo");
+        BtnCancelarAccion.Content = Loc.T("explorer.btn.cancelar");
+
         var archivos = _sesion.Archivos;
-        TxtSubtitulo.Text = archivos.Count == 1 ? "1 archivo" : $"{archivos.Count} archivos";
+        TxtSubtitulo.Text = Loc.Plural(archivos.Count, "explorer.subtitulo", archivos.Count);
 
         var raiz = ConstruirArbol(archivos);
         foreach (var control in ConstruirNodosCarpeta(raiz, 0))
@@ -177,7 +183,7 @@ public partial class ExplorerWindow : Window
             VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
             Cursor = new Cursor(StandardCursorType.Hand)
         };
-        ToolTip.SetTip(etiqueta, "Doble clic para abrir");
+        ToolTip.SetTip(etiqueta, Loc.T("explorer.tooltip.dobleClic"));
         Grid.SetColumn(etiqueta, 1);
         etiqueta.DoubleTapped += async (_, _) => await AbrirArchivo(relativa, etiqueta);
 
@@ -191,7 +197,7 @@ public partial class ExplorerWindow : Window
         var textoOriginal = etiqueta.Text;
         try
         {
-            etiqueta.Text = textoOriginal + "   (abriendo...)";
+            etiqueta.Text = textoOriginal + Loc.T("explorer.estado.abriendo");
 
             var carpetaTemp = Path.Combine(Path.GetTempPath(), "Encriptador_preview_" + Guid.NewGuid().ToString("N"));
             var destino = Path.Combine(carpetaTemp, ObtenerNombre(relativa));
@@ -204,7 +210,7 @@ public partial class ExplorerWindow : Window
         }
         catch (Exception ex)
         {
-            etiqueta.Text = textoOriginal + $"   (no se pudo abrir: {ex.Message})";
+            etiqueta.Text = textoOriginal + Loc.T("explorer.estado.errorAlAbrir", ex.Message);
             await Task.Delay(2500);
             etiqueta.Text = textoOriginal;
         }
@@ -223,8 +229,8 @@ public partial class ExplorerWindow : Window
     {
         var seleccionados = _entradas.Count(e => e.Casilla.IsChecked == true);
         BtnExtraer.Content = seleccionados == _entradas.Count
-            ? $"Extraer todo ({seleccionados})"
-            : $"Extraer seleccionados ({seleccionados})";
+            ? Loc.T("explorer.btn.extraerTodo", seleccionados)
+            : Loc.T("explorer.btn.extraerSeleccionados", seleccionados);
         BtnExtraer.IsEnabled = seleccionados > 0;
     }
 

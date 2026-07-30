@@ -36,7 +36,7 @@
                         Width="26" Height="26" Click="BtnCancelar_Click"/>
             </Grid>
 
-            <TextBlock Grid.Row="1" Text="Doble clic en un archivo para abrirlo. No se guarda nada en destino hasta que extraigas los seleccionados."
+            <TextBlock x:Name="TxtInstrucciones" Grid.Row="1" Text="Doble clic en un archivo para abrirlo. No se guarda nada en destino hasta que extraigas los seleccionados."
                        FontSize="11.5" Foreground="{StaticResource BrushTextoSecundario}"
                        TextWrapping="Wrap" Margin="0,14,0,10"/>
 

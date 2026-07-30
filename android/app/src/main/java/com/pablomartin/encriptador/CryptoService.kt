@@ -14,7 +14,7 @@ import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 
 /** Contraseña incorrecta o archivo .enc dañado/manipulado (falló la verificación GCM). */
-class ArchivoDanadoException(mensaje: String = "Contraseña incorrecta o archivo dañado.") :
+class ArchivoDanadoException(mensaje: String = Localization.t("crypto.archivoDanado")) :
     GeneralSecurityException(mensaje)
 
 /** El .enc es de carpeta pero se pidió tratarlo como archivo individual, o viceversa. */
@@ -71,7 +71,7 @@ object CryptoService {
         val salt = ByteArray(SALT_SIZE)
         leerCompleto(entrada, salt)
         val tipo = entrada.read()
-        if (tipo != TIPO_ARCHIVO) throw TipoIncorrectoException("Este .enc contiene una carpeta.")
+        if (tipo != TIPO_ARCHIVO) throw TipoIncorrectoException(Localization.t("crypto.tipoEsCarpeta"))
 
         val clave = derivarClave(password, salt)
         val longitud = leerLong(entrada)
@@ -120,7 +120,7 @@ object CryptoService {
         val salt = ByteArray(SALT_SIZE)
         leerCompleto(entrada, salt)
         val tipo = entrada.read()
-        if (tipo != TIPO_CARPETA) throw TipoIncorrectoException("Este .enc es un archivo individual.")
+        if (tipo != TIPO_CARPETA) throw TipoIncorrectoException(Localization.t("crypto.tipoEsArchivo"))
 
         val clave = derivarClave(password, salt)
         val manifiestoLen = leerLong(entrada)

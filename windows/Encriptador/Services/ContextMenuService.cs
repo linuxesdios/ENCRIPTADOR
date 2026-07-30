@@ -28,16 +28,18 @@ public static class ContextMenuService
         var exe = RutaEjecutable;
         var comando = $"\"{exe}\" \"%1\"";
 
+        var textoVerbo = Loc.T("common.contextmenu.encriptarCon");
+
         // Clic derecho sobre cualquier archivo -> "Encriptar con Encriptador"
-        RegistrarVerbo($@"Software\Classes\*\shell\{VerboEncriptar}", "Encriptar con Encriptador", exe, comando);
+        RegistrarVerbo($@"Software\Classes\*\shell\{VerboEncriptar}", textoVerbo, exe, comando);
 
         // Clic derecho sobre una carpeta -> "Encriptar con Encriptador"
-        RegistrarVerbo($@"Software\Classes\Directory\shell\{VerboEncriptar}", "Encriptar con Encriptador", exe, comando);
+        RegistrarVerbo($@"Software\Classes\Directory\shell\{VerboEncriptar}", textoVerbo, exe, comando);
 
         // Asociación de archivos .enc para "Abrir con" / doble clic -> desencriptar
         using (var progId = Registry.CurrentUser.CreateSubKey($@"Software\Classes\{ProgId}"))
         {
-            progId.SetValue(string.Empty, "Archivo encriptado (Encriptador)");
+            progId.SetValue(string.Empty, Loc.T("common.contextmenu.progIdNombre"));
             using var icono = progId.CreateSubKey("DefaultIcon");
             icono.SetValue(string.Empty, $"{exe},0");
             using var comandoClave = progId.CreateSubKey(@"shell\open\command");

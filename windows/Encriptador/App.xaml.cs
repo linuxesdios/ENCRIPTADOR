@@ -16,6 +16,8 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        Loc.Inicializar();
+
         if (e.Args.Contains("--desregistrar", StringComparer.OrdinalIgnoreCase))
         {
             // Usado por el desinstalador para quitar las entradas del menú contextual antes de borrar los archivos.

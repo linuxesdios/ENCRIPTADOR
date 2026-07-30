@@ -19,22 +19,34 @@
         </Grid.RowDefinitions>
 
         <!-- ===================== Encabezado ===================== -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
-            <Border Width="36" Height="36" CornerRadius="10" Background="{StaticResource BrushAcento}">
-                <TextBlock Text="&#128274;" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            </Border>
-            <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
-                <TextBlock Text="Encriptador" FontSize="18" FontWeight="Bold" Foreground="{StaticResource BrushTextoPrincipal}"/>
-                <TextBlock Text="Cifrado AES-256-GCM de archivos" FontSize="11" Foreground="{StaticResource BrushTextoSecundario}"/>
+        <Grid Grid.Row="0" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal">
+                <Border Width="36" Height="36" CornerRadius="10" Background="{StaticResource BrushAcento}">
+                    <TextBlock Text="&#128274;" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="Encriptador" FontSize="18" FontWeight="Bold" Foreground="{StaticResource BrushTextoPrincipal}"/>
+                    <TextBlock x:Name="TxtTagline" Text="Cifrado AES-256-GCM de archivos" FontSize="11" Foreground="{StaticResource BrushTextoSecundario}"/>
+                </StackPanel>
             </StackPanel>
-        </StackPanel>
+            <StackPanel x:Name="PanelIdioma" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button x:Name="BtnIdiomaEs" Content="ES" Classes="secundario" Padding="6,3" FontSize="10" Margin="0,0,4,0" Click="BtnIdioma_Click"/>
+                <Button x:Name="BtnIdiomaEn" Content="EN" Classes="secundario" Padding="6,3" FontSize="10" Margin="0,0,4,0" Click="BtnIdioma_Click"/>
+                <Button x:Name="BtnIdiomaRu" Content="RU" Classes="secundario" Padding="6,3" FontSize="10" Margin="0,0,4,0" Click="BtnIdioma_Click"/>
+                <Button x:Name="BtnIdiomaZh" Content="中" Classes="secundario" Padding="6,3" FontSize="10" Click="BtnIdioma_Click"/>
+            </StackPanel>
+        </Grid>
 
         <!-- ===================== Tarjeta principal ===================== -->
         <Border Grid.Row="1" Background="{StaticResource BrushFondoCard}" BorderBrush="{StaticResource BrushBorde}"
                 BorderThickness="1" CornerRadius="14" Padding="18" VerticalAlignment="Top">
             <StackPanel>
 
-                <TextBlock Text="ARCHIVO" FontSize="10.5" FontWeight="SemiBold" Foreground="{StaticResource BrushTextoSecundario}" Margin="2,0,0,6"/>
+                <TextBlock x:Name="LblArchivo" Text="ARCHIVO" FontSize="10.5" FontWeight="SemiBold" Foreground="{StaticResource BrushTextoSecundario}" Margin="2,0,0,6"/>
 
                 <!-- Zona de arrastrar y soltar / seleccionar archivo(s) -->
                 <Border x:Name="ZonaArchivo" MinHeight="68" CornerRadius="10" Background="#101A2C"
@@ -54,7 +66,7 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="CONTRASEÑA" FontSize="10.5" FontWeight="SemiBold" Foreground="{StaticResource BrushTextoSecundario}" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="LblContrasena" Text="CONTRASEÑA" FontSize="10.5" FontWeight="SemiBold" Foreground="{StaticResource BrushTextoSecundario}" VerticalAlignment="Center"/>
                     <Button x:Name="BtnMostrarPassword" Grid.Column="1" Content="Mostrar" Classes="secundario"
                             Padding="9,2" FontSize="10" Click="BtnMostrarPassword_Click"/>
                 </Grid>
@@ -64,7 +76,7 @@
                 <!-- Contenido exclusivo del modo "encriptar" -->
                 <StackPanel x:Name="PanelModoEncriptar">
 
-                    <TextBlock Text="REPETIR CONTRASEÑA" FontSize="10.5" FontWeight="SemiBold"
+                    <TextBlock x:Name="LblRepetir" Text="REPETIR CONTRASEÑA" FontSize="10.5" FontWeight="SemiBold"
                                Foreground="{StaticResource BrushTextoSecundario}" Margin="2,10,0,6"/>
                     <TextBox x:Name="TxtConfirmar" Classes="moderno" PasswordChar="●" KeyDown="Password_KeyDown"/>
 
@@ -124,12 +136,12 @@
                 <Image Source="avares://Encriptador/Assets/Autor.jpg" Stretch="UniformToFill" Width="22" Height="22"/>
             </Border>
 
-            <TextBlock Grid.Column="1" Text="Realizado por Pablo Martín Fernández"
+            <TextBlock x:Name="TxtCredito" Grid.Column="1" Text="Realizado por Pablo Martín Fernández"
                        FontSize="10.5" Foreground="{StaticResource BrushTextoSecundario}"
                        VerticalAlignment="Center" Margin="8,0,0,0"/>
 
             <Button x:Name="BtnAcerca" Grid.Column="2" Content="&#8505;" Classes="icono"
-                    ToolTip.Tip="Acerca de" Click="BtnAcerca_Click"/>
+                    Click="BtnAcerca_Click"/>
         </Grid>
 
     </Grid>

@@ -36,9 +36,15 @@ public partial class ExplorerWindow : Window
         InitializeComponent();
         _sesion = sesion;
 
+        Title = Loc.T("explorer.titulo");
         TxtTitulo.Text = nombreOrigen;
+        TxtInstrucciones.Text = Loc.T("explorer.instrucciones");
+        BtnSeleccionarTodo.Content = Loc.T("explorer.btn.seleccionarTodo");
+        BtnDeseleccionarTodo.Content = Loc.T("explorer.btn.deseleccionarTodo");
+        BtnCancelarAccion.Content = Loc.T("explorer.btn.cancelar");
+
         var archivos = _sesion.Archivos;
-        TxtSubtitulo.Text = archivos.Count == 1 ? "1 archivo" : $"{archivos.Count} archivos";
+        TxtSubtitulo.Text = Loc.Plural(archivos.Count, "explorer.subtitulo", archivos.Count);
 
         var raiz = ConstruirArbol(archivos);
         foreach (var control in ConstruirNodosCarpeta(raiz, 0))
@@ -177,7 +183,7 @@ public partial class ExplorerWindow : Window
             Margin = new Thickness(8, 0, 0, 0),
             VerticalAlignment = VerticalAlignment.Center,
             Cursor = Cursors.Hand,
-            ToolTip = "Doble clic para abrir"
+            ToolTip = Loc.T("explorer.tooltip.dobleClic")
         };
         Grid.SetColumn(etiqueta, 1);
         etiqueta.MouseLeftButtonDown += async (_, e) =>
@@ -196,7 +202,7 @@ public partial class ExplorerWindow : Window
         var textoOriginal = etiqueta.Text;
         try
         {
-            etiqueta.Text = textoOriginal + "   (abriendo...)";
+            etiqueta.Text = textoOriginal + Loc.T("explorer.estado.abriendo");
 
             var carpetaTemp = Path.Combine(Path.GetTempPath(), "Encriptador_preview_" + Guid.NewGuid().ToString("N"));
             var destino = Path.Combine(carpetaTemp, ObtenerNombre(relativa));
@@ -208,7 +214,7 @@ public partial class ExplorerWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, $"No se pudo abrir el archivo: {ex.Message}", "Encriptador",
+            MessageBox.Show(this, Loc.T("explorer.error.noSePudoAbrir", ex.Message), "Encriptador",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         finally
@@ -230,8 +236,8 @@ public partial class ExplorerWindow : Window
     {
         var seleccionados = _entradas.Count(e => e.Casilla.IsChecked == true);
         BtnExtraer.Content = seleccionados == _entradas.Count
-            ? $"Extraer todo ({seleccionados})"
-            : $"Extraer seleccionados ({seleccionados})";
+            ? Loc.T("explorer.btn.extraerTodo", seleccionados)
+            : Loc.T("explorer.btn.extraerSeleccionados", seleccionados);
         BtnExtraer.IsEnabled = seleccionados > 0;
     }
 

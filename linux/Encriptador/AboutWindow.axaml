@@ -16,20 +16,20 @@
 
             <TextBlock Text="Pablo Martín Fernández" FontSize="17" FontWeight="Bold"
                        Foreground="{StaticResource BrushTextoPrincipal}" HorizontalAlignment="Center" Margin="0,16,0,2"/>
-            <TextBlock Text="Desarrollador de la aplicación" FontSize="12"
+            <TextBlock x:Name="TxtDesarrollador" Text="Desarrollador de la aplicación" FontSize="12"
                        Foreground="{StaticResource BrushTextoSecundario}" HorizontalAlignment="Center"/>
 
             <Border Height="1" Background="{StaticResource BrushBorde}" Margin="0,20,0,20"/>
 
             <TextBlock Text="Encriptador" FontSize="14" FontWeight="SemiBold"
                        Foreground="{StaticResource BrushTextoPrincipal}" HorizontalAlignment="Center"/>
-            <TextBlock Text="Cifrado y descifrado de archivos con AES-256-GCM" FontSize="11.5"
+            <TextBlock x:Name="TxtTagline" Text="Cifrado y descifrado de archivos con AES-256-GCM" FontSize="11.5"
                        Foreground="{StaticResource BrushTextoSecundario}" HorizontalAlignment="Center"
                        TextWrapping="Wrap" TextAlignment="Center" Margin="0,4,0,0"/>
-            <TextBlock Text="Versión 1.0 · Avalonia UI" FontSize="11" Foreground="{StaticResource BrushTextoSecundario}"
+            <TextBlock x:Name="TxtVersion" Text="Versión 1.0 · Avalonia UI" FontSize="11" Foreground="{StaticResource BrushTextoSecundario}"
                        HorizontalAlignment="Center" Margin="0,10,0,0"/>
 
-            <Button Content="Cerrar" Classes="secundario" Margin="0,22,0,0"
+            <Button x:Name="BtnCerrar" Content="Cerrar" Classes="secundario" Margin="0,22,0,0"
                     HorizontalAlignment="Center" Padding="28,8" Click="BtnCerrar_Click"/>
         </StackPanel>
     </Border>

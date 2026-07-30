@@ -23,7 +23,53 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        AplicarIdioma();
         ActualizarModoUI();
+    }
+
+    // ===================== Idioma =====================
+
+    private void AplicarIdioma()
+    {
+        TxtTagline.Text = Loc.T("main.tagline");
+        LblArchivo.Text = Loc.T("main.archivo.etiqueta");
+        ActualizarTextoArchivo();
+        LblContrasena.Text = Loc.T("common.contrasena");
+        LblRepetir.Text = Loc.T("common.repetirContrasena");
+        BtnMostrarPassword.Content = Loc.T(_mostrandoPassword ? "common.ocultar" : "common.mostrar");
+        ChkBorradoSeguro.Content = Loc.T("common.chk.borradoSeguro");
+        BtnEncriptar.Content = "\U0001F512  " + Loc.T("common.encriptar");
+        BtnDesencriptar.Content = "\U0001F511  " + Loc.T("common.desencriptar");
+        TxtCredito.Text = Loc.T("common.footer.credito", "Pablo Martín Fernández");
+        ToolTip.SetTip(BtnAcerca, Loc.T("main.tooltip.acerca"));
+
+        var actual = Loc.IdiomaActual;
+        foreach (var boton in new[] { BtnIdiomaEs, BtnIdiomaEn, BtnIdiomaRu, BtnIdiomaZh })
+            boton.Background = Brushes.Transparent;
+        var activo = actual switch
+        {
+            Idioma.En => BtnIdiomaEn,
+            Idioma.Ru => BtnIdiomaRu,
+            Idioma.Zh => BtnIdiomaZh,
+            _ => BtnIdiomaEs,
+        };
+        activo.Background = Recurso<IBrush>("BrushAcento1Solido");
+
+        ActualizarModoUI();
+    }
+
+    private void BtnIdioma_Click(object? sender, RoutedEventArgs e)
+    {
+        var nuevo = sender switch
+        {
+            var s when s == BtnIdiomaEn => Idioma.En,
+            var s when s == BtnIdiomaRu => Idioma.Ru,
+            var s when s == BtnIdiomaZh => Idioma.Zh,
+            _ => Idioma.Es,
+        };
+
+        Loc.CambiarIdioma(nuevo);
+        AplicarIdioma();
     }
 
     // ===================== Selección de archivo(s)/carpeta =====================
@@ -32,7 +78,7 @@ public partial class MainWindow : Window
     {
         var opciones = new FilePickerOpenOptions
         {
-            Title = "Seleccionar archivo(s)",
+            Title = Loc.T("main.dialog.abrir.titulo"),
             AllowMultiple = true
         };
 
@@ -82,28 +128,37 @@ public partial class MainWindow : Window
 
         if (validas.Length > 1 && validas.Any(Directory.Exists))
         {
-            MostrarEstado("⚠️", "Para carpetas, elegí una por vez (no se puede combinar con otros archivos).", EstadoTipo.Error);
+            MostrarEstado("⚠️", Loc.T("main.error.carpetaUnaPorVez"), EstadoTipo.Error);
             return;
         }
 
         _rutasSeleccionadas.Clear();
         _rutasSeleccionadas.AddRange(validas);
 
-        if (validas.Length == 1)
+        ActualizarTextoArchivo();
+        ActualizarModoUI();
+        LimpiarEstado();
+    }
+
+    private void ActualizarTextoArchivo()
+    {
+        if (_rutasSeleccionadas.Count == 0)
         {
-            var ruta = validas[0];
+            TxtNombreArchivo.Text = Loc.T("main.archivo.placeholder");
+            IconoArchivo.Text = "\U0001F4C1";
+        }
+        else if (_rutasSeleccionadas.Count == 1)
+        {
+            var ruta = _rutasSeleccionadas[0];
             var esCarpeta = Directory.Exists(ruta);
-            TxtNombreArchivo.Text = esCarpeta ? $"Carpeta: {Path.GetFileName(ruta)}" : Path.GetFileName(ruta);
+            TxtNombreArchivo.Text = esCarpeta ? Loc.T("main.archivo.carpeta", Path.GetFileName(ruta)) : Path.GetFileName(ruta);
             IconoArchivo.Text = esCarpeta ? "\U0001F4C1" : "\U0001F4C4";
         }
         else
         {
-            TxtNombreArchivo.Text = $"{validas.Length} archivos seleccionados";
+            TxtNombreArchivo.Text = Loc.T("main.archivo.variosSeleccionados", _rutasSeleccionadas.Count);
             IconoArchivo.Text = "\U0001F4E6";
         }
-
-        ActualizarModoUI();
-        LimpiarEstado();
     }
 
     private bool EsModoEncriptar()
@@ -119,9 +174,9 @@ public partial class MainWindow : Window
     {
         var modoEncriptar = EsModoEncriptar();
         PanelModoEncriptar.IsVisible = modoEncriptar;
-        ChkConservarOriginal.Content = modoEncriptar
-            ? "Conservar el archivo original (no borrarlo al terminar)"
-            : "Conservar el archivo encriptado .enc (no borrarlo al terminar)";
+        ChkConservarOriginal.Content = Loc.T(modoEncriptar
+            ? "common.chk.conservarOriginal.encriptar"
+            : "common.chk.conservarOriginal.desencriptar");
     }
 
     // ===================== Contraseña: mostrar/ocultar y fuerza =====================
@@ -136,7 +191,7 @@ public partial class MainWindow : Window
         var caracter = _mostrandoPassword ? default(char) : '●';
         TxtPassword.PasswordChar = caracter;
         TxtConfirmar.PasswordChar = caracter;
-        BtnMostrarPassword.Content = _mostrandoPassword ? "Ocultar" : "Mostrar";
+        BtnMostrarPassword.Content = Loc.T(_mostrandoPassword ? "common.ocultar" : "common.mostrar");
     }
 
     private void TxtPassword_Changed(object? sender, TextChangedEventArgs e) => ActualizarFuerza();
@@ -203,13 +258,13 @@ public partial class MainWindow : Window
         var password = ObtenerPassword();
         if (string.IsNullOrEmpty(password))
         {
-            MostrarEstado("⚠️", "Ingresá una contraseña.", EstadoTipo.Error);
+            MostrarEstado("⚠️", Loc.T("common.estado.passwordRequerida"), EstadoTipo.Error);
             return;
         }
 
         if (password != ObtenerConfirmar())
         {
-            MostrarEstado("⚠️", "Las contraseñas no coinciden.", EstadoTipo.Error);
+            MostrarEstado("⚠️", Loc.T("common.estado.passwordsNoCoinciden"), EstadoTipo.Error);
             return;
         }
 
@@ -221,11 +276,11 @@ public partial class MainWindow : Window
             var carpetaInicial = await StorageProvider.TryGetFolderFromPathAsync(Path.GetDirectoryName(_rutasSeleccionadas[0])!);
             var opciones = new FilePickerSaveOptions
             {
-                Title = "Guardar como",
-                SuggestedFileName = $"{_rutasSeleccionadas.Count} archivos.enc",
+                Title = Loc.T("main.dialog.guardar.titulo"),
+                SuggestedFileName = Loc.T("main.dialog.guardar.nombreVarios", _rutasSeleccionadas.Count),
                 DefaultExtension = "enc",
                 SuggestedStartLocation = carpetaInicial,
-                FileTypeChoices = new[] { new FilePickerFileType("Archivo encriptado") { Patterns = new[] { "*.enc" } } }
+                FileTypeChoices = new[] { new FilePickerFileType(Loc.T("main.dialog.guardar.filtroEtiqueta")) { Patterns = new[] { "*.enc" } } }
             };
 
             var archivoDestino = await StorageProvider.SaveFilePickerAsync(opciones);
@@ -236,7 +291,7 @@ public partial class MainWindow : Window
             var progreso = CrearProgreso();
             await EjecutarOperacionAsync(
                 () => CryptoService.EncriptarVarios(_rutasSeleccionadas, destino, password, conservarOriginal, borradoSeguro, progreso),
-                n => $"{n} archivos encriptados en un solo paquete.");
+                n => Loc.T("common.estado.variosEncriptados", n));
             return;
         }
 
@@ -247,8 +302,8 @@ public partial class MainWindow : Window
         await EjecutarOperacionAsync(
             () => CryptoService.Encriptar(ruta, password, conservarOriginal, borradoSeguro, progresoUno),
             r => esCarpeta
-                ? $"Carpeta encriptada en un solo archivo ({r.ArchivosIncluidos} archivos incluidos)."
-                : "Archivo encriptado correctamente.");
+                ? Loc.T("common.estado.carpetaEncriptada", r.ArchivosIncluidos)
+                : Loc.T("common.estado.archivoEncriptado"));
     }
 
     // ===================== Desencriptar =====================
@@ -260,7 +315,7 @@ public partial class MainWindow : Window
 
         if (_rutasSeleccionadas.Count > 1)
         {
-            MostrarEstado("⚠️", "Para desencriptar, elegí un solo archivo .enc.", EstadoTipo.Error);
+            MostrarEstado("⚠️", Loc.T("main.error.soloUnArchivoEnc"), EstadoTipo.Error);
             return;
         }
 
@@ -268,13 +323,13 @@ public partial class MainWindow : Window
         var password = ObtenerPassword();
         if (string.IsNullOrEmpty(password))
         {
-            MostrarEstado("⚠️", "Ingresá una contraseña.", EstadoTipo.Error);
+            MostrarEstado("⚠️", Loc.T("common.estado.passwordRequerida"), EstadoTipo.Error);
             return;
         }
 
         if (Directory.Exists(ruta))
         {
-            MostrarEstado("⚠️", "Para desencriptar, elegí un archivo .enc (no una carpeta).", EstadoTipo.Error);
+            MostrarEstado("⚠️", Loc.T("main.error.noEsCarpeta"), EstadoTipo.Error);
             return;
         }
 
@@ -288,7 +343,7 @@ public partial class MainWindow : Window
 
         await EjecutarOperacionAsync(
             () => CryptoService.Desencriptar(ruta, password, conservarOriginal),
-            _ => "Archivo desencriptado correctamente.");
+            _ => Loc.T("common.estado.archivoDesencriptado"));
     }
 
     /// <summary>
@@ -301,7 +356,7 @@ public partial class MainWindow : Window
     {
         SetControlesHabilitados(false);
         BarraProgreso.IsIndeterminate = true;
-        MostrarEstado("⏳", "Verificando contraseña...", EstadoTipo.Info);
+        MostrarEstado("⏳", Loc.T("common.estado.verificandoPassword"), EstadoTipo.Info);
 
         try
         {
@@ -315,27 +370,26 @@ public partial class MainWindow : Window
                 var seleccionados = explorador.Seleccionados;
                 var destinoDir = Path.GetDirectoryName(ruta) ?? string.Empty;
 
-                MostrarEstado("⏳", "Extrayendo...", EstadoTipo.Info);
                 var progreso = CrearProgreso();
                 await Task.Run(() => sesion.ExtraerVarios(seleccionados, destinoDir, progreso));
 
                 if (!conservarOriginal)
                     File.Delete(ruta);
 
-                MostrarEstado("✅", $"Carpeta restaurada: {seleccionados.Count} de {sesion.Archivos.Count} archivos.", EstadoTipo.Exito);
+                MostrarEstado("✅", Loc.T("common.estado.carpetaRestaurada", seleccionados.Count, sesion.Archivos.Count), EstadoTipo.Exito);
             }
             else
             {
-                MostrarEstado("ℹ️", "Operación cancelada. No se modificó nada.", EstadoTipo.Info);
+                MostrarEstado("ℹ️", Loc.T("common.estado.operacionCancelada"), EstadoTipo.Info);
             }
         }
         catch (CryptographicException)
         {
-            MostrarEstado("❌", "No se pudo desencriptar: contraseña incorrecta o archivo dañado.", EstadoTipo.Error);
+            MostrarEstado("❌", Loc.T("common.estado.noPudoDesencriptar"), EstadoTipo.Error);
         }
         catch (Exception ex)
         {
-            MostrarEstado("❌", $"Error: {ex.Message}", EstadoTipo.Error);
+            MostrarEstado("❌", Loc.T("common.estado.error", ex.Message), EstadoTipo.Error);
         }
         finally
         {
@@ -350,7 +404,7 @@ public partial class MainWindow : Window
     {
         if (_rutasSeleccionadas.Count == 0 || !_rutasSeleccionadas.All(r => File.Exists(r) || Directory.Exists(r)))
         {
-            MostrarEstado("⚠️", "Seleccioná un archivo o carpeta válido.", EstadoTipo.Error);
+            MostrarEstado("⚠️", Loc.T("main.error.seleccionInvalida"), EstadoTipo.Error);
             return false;
         }
         return true;
@@ -363,14 +417,14 @@ public partial class MainWindow : Window
             BarraProgreso.Minimum = 0;
             BarraProgreso.Maximum = p.Total;
             BarraProgreso.Value = p.Actual;
-            MostrarEstado("⏳", $"Procesando archivo {p.Actual} de {p.Total}...", EstadoTipo.Info);
+            MostrarEstado("⏳", Loc.T("common.estado.procesandoArchivo", p.Actual, p.Total), EstadoTipo.Info);
         });
 
     private async Task EjecutarOperacionAsync<T>(Func<T> operacion, Func<T, string> mensajeExito)
     {
         SetControlesHabilitados(false);
         BarraProgreso.IsIndeterminate = true;
-        MostrarEstado("⏳", "Procesando...", EstadoTipo.Info);
+        MostrarEstado("⏳", Loc.T("common.estado.procesando"), EstadoTipo.Info);
 
         try
         {
@@ -379,7 +433,7 @@ public partial class MainWindow : Window
         }
         catch (CryptographicException)
         {
-            MostrarEstado("❌", "No se pudo desencriptar: contraseña incorrecta o archivo dañado.", EstadoTipo.Error);
+            MostrarEstado("❌", Loc.T("common.estado.noPudoDesencriptar"), EstadoTipo.Error);
         }
         catch (InvalidOperationException ex)
         {
@@ -387,7 +441,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            MostrarEstado("❌", $"Error: {ex.Message}", EstadoTipo.Error);
+            MostrarEstado("❌", Loc.T("common.estado.error", ex.Message), EstadoTipo.Error);
         }
         finally
         {

@@ -94,7 +94,7 @@ public static class CryptoService
             return (1, destino);
         }
 
-        throw new FileNotFoundException("La ruta no existe.", ruta);
+        throw new FileNotFoundException(Loc.T("crypto.rutaNoExiste"), ruta);
     }
 
     /// <summary>
@@ -172,12 +172,12 @@ public static class CryptoService
             LeerCompleto(entrada, salt);
             var tipo = entrada.ReadByte();
             if (tipo != TipoArchivo)
-                throw new InvalidOperationException("Este .enc contiene una carpeta: abrilo con el explorador en vez de desencriptarlo directo.");
+                throw new InvalidOperationException(Loc.T("crypto.tipoEsCarpeta"));
 
             var clave = DerivarClave(password, salt);
             var longitud = LeerInt64(entrada);
             if (longitud < 0)
-                throw new CryptographicException("Contraseña incorrecta o archivo dañado.");
+                throw new CryptographicException(Loc.T("crypto.archivoDanado"));
 
             using var salida = File.Create(nombreBase);
             DescifrarStream(entrada, salida, clave, longitud);
@@ -206,13 +206,13 @@ public static class CryptoService
         LeerCompleto(entrada, salt);
         var tipo = entrada.ReadByte();
         if (tipo != TipoCarpeta)
-            throw new InvalidOperationException("Este .enc es un archivo individual: desencriptalo directo en vez de explorarlo.");
+            throw new InvalidOperationException(Loc.T("crypto.tipoEsArchivo"));
 
         var clave = DerivarClave(password, salt);
 
         var manifiestoLen = LeerInt64(entrada);
         if (manifiestoLen < 0 || manifiestoLen > MaxLongitudManifiesto)
-            throw new CryptographicException("Contraseña incorrecta o archivo dañado.");
+            throw new CryptographicException(Loc.T("crypto.archivoDanado"));
 
         byte[] manifiestoPlano;
         using (var msSalida = new MemoryStream())
@@ -254,7 +254,7 @@ public static class CryptoService
         public void ExtraerArchivo(string rutaRelativa, string destino)
         {
             var entrada = _entradas.FirstOrDefault(e => e.Relativa == rutaRelativa)
-                ?? throw new FileNotFoundException("El archivo no está en el manifiesto.", rutaRelativa);
+                ?? throw new FileNotFoundException(Loc.T("crypto.archivoNoManifiesto"), rutaRelativa);
 
             var carpetaContenedora = Path.GetDirectoryName(destino);
             if (!string.IsNullOrEmpty(carpetaContenedora))
@@ -335,7 +335,7 @@ public static class CryptoService
             }
             catch (CryptographicException)
             {
-                throw new CryptographicException("Contraseña incorrecta o archivo dañado.");
+                throw new CryptographicException(Loc.T("crypto.archivoDanado"));
             }
 
             salida.Write(plano);
@@ -402,10 +402,10 @@ public static class CryptoService
     private static void ValidarRutaEnc(string ruta)
     {
         if (Directory.Exists(ruta))
-            throw new InvalidOperationException("Para desencriptar seleccioná el archivo .enc, no la carpeta.");
+            throw new InvalidOperationException(Loc.T("crypto.seleccionarArchivoEnc"));
 
         if (!File.Exists(ruta))
-            throw new FileNotFoundException("La ruta no existe.", ruta);
+            throw new FileNotFoundException(Loc.T("crypto.rutaNoExiste"), ruta);
     }
 
     private static byte[] SerializarManifiesto(List<(string RutaCompleta, string Relativa, long Longitud, long Offset)> entradas)
@@ -428,14 +428,14 @@ public static class CryptoService
         using var ms = new MemoryStream(datos);
         var cantidad = LeerInt32(ms);
         if (cantidad < 0 || cantidad > MaxEntradas)
-            throw new CryptographicException("Contraseña incorrecta o archivo dañado.");
+            throw new CryptographicException(Loc.T("crypto.archivoDanado"));
 
         var lista = new List<EntradaManifiesto>(cantidad);
         for (var i = 0; i < cantidad; i++)
         {
             var pathLen = LeerInt32(ms);
             if (pathLen <= 0 || pathLen > MaxLongitudRuta)
-                throw new CryptographicException("Contraseña incorrecta o archivo dañado.");
+                throw new CryptographicException(Loc.T("crypto.archivoDanado"));
 
             var pathBytes = new byte[pathLen];
             LeerCompleto(ms, pathBytes);
@@ -444,7 +444,7 @@ public static class CryptoService
             var longitud = LeerInt64(ms);
             var offset = LeerInt64(ms);
             if (longitud < 0 || offset < 0)
-                throw new CryptographicException("Contraseña incorrecta o archivo dañado.");
+                throw new CryptographicException(Loc.T("crypto.archivoDanado"));
 
             lista.Add(new EntradaManifiesto(relativa, longitud, offset));
         }
@@ -476,7 +476,7 @@ public static class CryptoService
         {
             var n = stream.Read(buffer[leido..]);
             if (n == 0)
-                throw new CryptographicException("Contraseña incorrecta o archivo dañado.");
+                throw new CryptographicException(Loc.T("crypto.archivoDanado"));
             leido += n;
         }
     }

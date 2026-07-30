@@ -33,11 +33,11 @@ object PasswordStrength {
     }
 
     fun texto(nivel: NivelFuerza): String = when (nivel) {
-        NivelFuerza.MUY_DEBIL -> "Muy débil"
-        NivelFuerza.DEBIL -> "Débil"
-        NivelFuerza.MEDIA -> "Media"
-        NivelFuerza.FUERTE -> "Fuerte"
-        NivelFuerza.MUY_FUERTE -> "Muy fuerte"
+        NivelFuerza.MUY_DEBIL -> Localization.t("strength.muyDebil")
+        NivelFuerza.DEBIL -> Localization.t("strength.debil")
+        NivelFuerza.MEDIA -> Localization.t("strength.media")
+        NivelFuerza.FUERTE -> Localization.t("strength.fuerte")
+        NivelFuerza.MUY_FUERTE -> Localization.t("strength.muyFuerte")
     }
 
     fun segmentos(nivel: NivelFuerza, vacia: Boolean): Int {

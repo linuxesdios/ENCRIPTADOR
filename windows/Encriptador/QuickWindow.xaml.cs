@@ -28,16 +28,54 @@ public partial class QuickWindow : Window
         _esDesencriptar = File.Exists(ruta) && CryptoService.EsArchivoEncriptado(ruta);
         _esCarpeta = Directory.Exists(ruta);
 
-        TxtNombre.Text = (_esCarpeta ? "Carpeta: " : "Archivo: ") + Path.GetFileName(ruta.TrimEnd('\\'));
         Icono.Text = _esDesencriptar ? "\U0001F511" : "\U0001F512";
-        TxtTitulo.Text = _esDesencriptar ? "Desencriptar" : "Encriptar";
-        BtnAccion.Content = _esDesencriptar ? "Desencriptar" : "Encriptar";
-        ChkConservarOriginal.Content = _esDesencriptar
-            ? "Conservar el archivo encriptado (.enc)"
-            : "Conservar el archivo original";
         PanelModoEncriptar.Visibility = _esDesencriptar ? Visibility.Collapsed : Visibility.Visible;
+        AplicarIdioma();
 
         Loaded += (_, _) => TxtPassword.Focus();
+    }
+
+    // ===================== Idioma =====================
+
+    private void AplicarIdioma()
+    {
+        var nombreArchivo = Path.GetFileName(_ruta.TrimEnd('\\'));
+        TxtNombre.Text = Loc.T(_esCarpeta ? "main.archivo.carpeta" : "quick.archivo.archivo", nombreArchivo);
+        TxtTitulo.Text = Loc.T(_esDesencriptar ? "common.desencriptar" : "common.encriptar");
+        BtnAccion.Content = Loc.T(_esDesencriptar ? "common.desencriptar" : "common.encriptar");
+        LblContrasena.Text = Loc.T("common.contrasena");
+        LblRepetir.Text = Loc.T("common.repetirContrasena");
+        BtnMostrarPassword.Content = Loc.T(_mostrandoPassword ? "common.ocultar" : "common.mostrar");
+        ChkConservarOriginal.Content = Loc.T(_esDesencriptar
+            ? "common.chk.conservarOriginal.desencriptar"
+            : "common.chk.conservarOriginal.encriptar");
+        ChkBorradoSeguro.Content = Loc.T("common.chk.borradoSeguro");
+
+        var actual = Loc.IdiomaActual;
+        foreach (var boton in new[] { BtnIdiomaEs, BtnIdiomaEn, BtnIdiomaRu, BtnIdiomaZh })
+            boton.Background = Brushes.Transparent;
+        var activo = actual switch
+        {
+            Idioma.En => BtnIdiomaEn,
+            Idioma.Ru => BtnIdiomaRu,
+            Idioma.Zh => BtnIdiomaZh,
+            _ => BtnIdiomaEs,
+        };
+        activo.Background = (Brush)FindResource("BrushAcento1Solido");
+    }
+
+    private void BtnIdioma_Click(object sender, RoutedEventArgs e)
+    {
+        var nuevo = sender switch
+        {
+            var s when s == BtnIdiomaEn => Idioma.En,
+            var s when s == BtnIdiomaRu => Idioma.Ru,
+            var s when s == BtnIdiomaZh => Idioma.Zh,
+            _ => Idioma.Es,
+        };
+
+        Loc.CambiarIdioma(nuevo);
+        AplicarIdioma();
     }
 
     private string ObtenerPassword() => _mostrandoPassword ? TxtPasswordVisible.Text : TxtPassword.Password;
@@ -64,7 +102,7 @@ public partial class QuickWindow : Window
         TxtConfirmar.Visibility = _mostrandoPassword ? Visibility.Collapsed : Visibility.Visible;
         TxtConfirmarVisible.Visibility = _mostrandoPassword ? Visibility.Visible : Visibility.Collapsed;
 
-        BtnMostrarPassword.Content = _mostrandoPassword ? "Ocultar" : "Mostrar";
+        BtnMostrarPassword.Content = Loc.T(_mostrandoPassword ? "common.ocultar" : "common.mostrar");
     }
 
     private void TxtPassword_Changed(object sender, RoutedEventArgs e) => ActualizarFuerza();
@@ -121,18 +159,18 @@ public partial class QuickWindow : Window
         var password = ObtenerPassword();
         if (string.IsNullOrEmpty(password))
         {
-            MostrarEstado("⚠️", "Ingresá una contraseña.", Estado.Error);
+            MostrarEstado("⚠️", Loc.T("common.estado.passwordRequerida"), Estado.Error);
             return;
         }
 
         if (!_esDesencriptar && password != ObtenerConfirmar())
         {
-            MostrarEstado("⚠️", "Las contraseñas no coinciden.", Estado.Error);
+            MostrarEstado("⚠️", Loc.T("common.estado.passwordsNoCoinciden"), Estado.Error);
             return;
         }
 
         SetControlesHabilitados(false);
-        MostrarEstado("⏳", "Procesando...", Estado.Info);
+        MostrarEstado("⏳", Loc.T("common.estado.procesando"), Estado.Info);
 
         try
         {
@@ -154,32 +192,32 @@ public partial class QuickWindow : Window
                     var destinoDir = Path.GetDirectoryName(_ruta) ?? string.Empty;
 
                     var progreso = new Progress<(int Actual, int Total)>(p =>
-                        MostrarEstado("⏳", $"Extrayendo {p.Actual} de {p.Total}...", Estado.Info));
+                        MostrarEstado("⏳", Loc.T("common.estado.procesandoArchivo", p.Actual, p.Total), Estado.Info));
                     await Task.Run(() => sesion.ExtraerVarios(seleccionados, destinoDir, progreso));
 
                     if (!conservarOriginal)
                         File.Delete(_ruta);
 
-                    texto = $"Carpeta restaurada: {seleccionados.Count} de {sesion.Archivos.Count} archivos.";
+                    texto = Loc.T("common.estado.carpetaRestaurada", seleccionados.Count, sesion.Archivos.Count);
                 }
                 else
                 {
-                    texto = "Operación cancelada.";
+                    texto = Loc.T("common.estado.operacionCancelada");
                     cancelado = true;
                 }
             }
             else if (_esDesencriptar)
             {
                 await Task.Run(() => CryptoService.Desencriptar(_ruta, password, conservarOriginal));
-                texto = "Archivo desencriptado.";
+                texto = Loc.T("common.estado.archivoDesencriptado");
             }
             else
             {
                 var borradoSeguro = ChkBorradoSeguro.IsChecked == true;
                 var (procesados, _) = await Task.Run(() => CryptoService.Encriptar(_ruta, password, conservarOriginal, borradoSeguro));
                 texto = _esCarpeta
-                    ? $"Carpeta encriptada en un solo archivo ({procesados} archivos)."
-                    : "Archivo encriptado.";
+                    ? Loc.T("common.estado.carpetaEncriptada", procesados)
+                    : Loc.T("common.estado.archivoEncriptado");
             }
 
             MostrarEstado(cancelado ? "ℹ️" : "✅", texto, cancelado ? Estado.Info : Estado.Exito);
@@ -188,7 +226,7 @@ public partial class QuickWindow : Window
         }
         catch (CryptographicException)
         {
-            MostrarEstado("❌", "Contraseña incorrecta o archivo dañado.", Estado.Error);
+            MostrarEstado("❌", Loc.T("common.estado.noPudoDesencriptar"), Estado.Error);
             SetControlesHabilitados(true);
             TxtPassword.Focus();
         }
@@ -199,7 +237,7 @@ public partial class QuickWindow : Window
         }
         catch (Exception ex)
         {
-            MostrarEstado("❌", $"Error: {ex.Message}", Estado.Error);
+            MostrarEstado("❌", Loc.T("common.estado.error", ex.Message), Estado.Error);
             SetControlesHabilitados(true);
         }
     }
