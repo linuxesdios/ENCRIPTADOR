@@ -51,13 +51,17 @@ object CryptoService {
 
     // ===================== Archivo individual =====================
 
-    fun encriptarArchivo(entrada: InputStream, longitud: Long, salida: OutputStream, password: String) {
+    fun encriptarArchivo(
+        entrada: InputStream, longitud: Long, salida: OutputStream, password: String,
+        progreso: ((Long, Long) -> Unit)? = null,
+    ) {
         val salt = ByteArray(SALT_SIZE).also { SecureRandom().nextBytes(it) }
         val clave = derivarClave(password, salt)
         salida.write(salt)
         salida.write(TIPO_ARCHIVO)
         escribirLong(salida, longitud)
-        cifrarStream(entrada, salida, clave, longitud)
+        val onChunk = progreso?.let { acumuladorDeProgreso(longitud, it) }
+        cifrarStream(entrada, salida, clave, longitud, onChunk)
     }
 
     /** Lee el tipo de un .enc (archivo o carpeta) sin necesitar la contraseña: va sin cifrar. */
@@ -67,7 +71,10 @@ object CryptoService {
         return entrada.read() == TIPO_CARPETA
     }
 
-    fun desencriptarArchivo(entrada: InputStream, salida: OutputStream, password: String) {
+    fun desencriptarArchivo(
+        entrada: InputStream, salida: OutputStream, password: String,
+        progreso: ((Long, Long) -> Unit)? = null,
+    ) {
         val salt = ByteArray(SALT_SIZE)
         leerCompleto(entrada, salt)
         val tipo = entrada.read()
@@ -76,7 +83,8 @@ object CryptoService {
         val clave = derivarClave(password, salt)
         val longitud = leerLong(entrada)
         if (longitud < 0) throw ArchivoDanadoException()
-        descifrarStream(entrada, salida, clave, longitud)
+        val onChunk = progreso?.let { acumuladorDeProgreso(longitud, it) }
+        descifrarStream(entrada, salida, clave, longitud, onChunk)
     }
 
     // ===================== Carpeta =====================
@@ -84,7 +92,10 @@ object CryptoService {
     /** Cada entrada de origen: ruta relativa (con '/') + su tamaño + una forma de abrirla para leer. */
     class FuenteArchivo(val relativa: String, val longitud: Long, val abrir: () -> InputStream)
 
-    fun encriptarCarpeta(archivos: List<FuenteArchivo>, salida: OutputStream, password: String, progreso: ((Int, Int) -> Unit)? = null): Int {
+    fun encriptarCarpeta(
+        archivos: List<FuenteArchivo>, salida: OutputStream, password: String,
+        progreso: ((Long, Long) -> Unit)? = null,
+    ): Int {
         val salt = ByteArray(SALT_SIZE).also { SecureRandom().nextBytes(it) }
         val clave = derivarClave(password, salt)
 
@@ -100,11 +111,13 @@ object CryptoService {
 
         val manifiestoPlano = serializarManifiesto(entradas)
         escribirLong(salida, manifiestoPlano.size.toLong())
+        // El manifiesto no cuenta para el progreso: se cifra sin onChunk.
         cifrarStream(manifiestoPlano.inputStream(), salida, clave, manifiestoPlano.size.toLong())
 
-        archivos.forEachIndexed { i, f ->
-            f.abrir().use { cifrarStream(it, salida, clave, f.longitud) }
-            progreso?.invoke(i + 1, archivos.size)
+        val bytesTotal = archivos.sumOf { it.longitud }
+        val onChunk = progreso?.let { acumuladorDeProgreso(bytesTotal, it) }
+        archivos.forEach { f ->
+            f.abrir().use { cifrarStream(it, salida, clave, f.longitud, onChunk) }
         }
 
         return archivos.size
@@ -141,15 +154,16 @@ object CryptoService {
         reabrirEntrada: () -> InputStream,
         sesion: SesionCarpeta,
         crearSalida: (EntradaManifiesto) -> OutputStream,
-        progreso: ((Int, Int) -> Unit)? = null,
+        progreso: ((Long, Long) -> Unit)? = null,
     ) {
         reabrirEntrada().use { entrada ->
             val inicioDatos = SALT_SIZE + 1 + 8 + longitudCifrada(manifiestoPlanoLongitud(sesion))
             saltar(entrada, inicioDatos)
 
-            sesion.entradas.forEachIndexed { i, e ->
-                crearSalida(e).use { salida -> descifrarStream(entrada, salida, sesion.clave, e.longitud) }
-                progreso?.invoke(i + 1, sesion.entradas.size)
+            val bytesTotal = sesion.entradas.sumOf { it.longitud }
+            val onChunk = progreso?.let { acumuladorDeProgreso(bytesTotal, it) }
+            sesion.entradas.forEach { e ->
+                crearSalida(e).use { salida -> descifrarStream(entrada, salida, sesion.clave, e.longitud, onChunk) }
             }
         }
     }
@@ -161,7 +175,10 @@ object CryptoService {
 
     // ===================== Cifrado/descifrado por bloques (AES-256-GCM) =====================
 
-    private fun cifrarStream(entrada: InputStream, salida: OutputStream, clave: ByteArray, longitudTotal: Long) {
+    private fun cifrarStream(
+        entrada: InputStream, salida: OutputStream, clave: ByteArray, longitudTotal: Long,
+        onChunk: ((Int) -> Unit)? = null,
+    ) {
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         val secretKey = SecretKeySpec(clave, "AES")
         val buffer = ByteArray(TAMANO_CHUNK)
@@ -183,10 +200,14 @@ object CryptoService {
             salida.write(cifradoConTag, 0, tam) // ciphertext
 
             restante -= tam
+            onChunk?.invoke(tam)
         }
     }
 
-    private fun descifrarStream(entrada: InputStream, salida: OutputStream, clave: ByteArray, longitudTotal: Long) {
+    private fun descifrarStream(
+        entrada: InputStream, salida: OutputStream, clave: ByteArray, longitudTotal: Long,
+        onChunk: ((Int) -> Unit)? = null,
+    ) {
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         val secretKey = SecretKeySpec(clave, "AES")
         val nonce = ByteArray(NONCE_SIZE)
@@ -211,6 +232,7 @@ object CryptoService {
             }
 
             restante -= tam
+            onChunk?.invoke(tam)
         }
     }
 
@@ -219,6 +241,25 @@ object CryptoService {
 
     private fun longitudCifrada(longitudOriginal: Long): Long =
         longitudOriginal + numeroDeChunks(longitudOriginal).toLong() * (NONCE_SIZE + TAG_SIZE)
+
+    /**
+     * Envuelve un callback en bytes en uno liviano por bloque: acumula bytes
+     * procesados y solo dispara el callback real cada ~256KB o en el último
+     * bloque, para no saturar la UI en archivos grandes.
+     */
+    private fun acumuladorDeProgreso(bytesTotal: Long, progreso: (Long, Long) -> Unit): (Int) -> Unit {
+        val umbral = 256L * 1024
+        var bytesHechos = 0L
+        var pendiente = 0L
+        return { tam ->
+            bytesHechos += tam
+            pendiente += tam
+            if (pendiente >= umbral || bytesHechos >= bytesTotal) {
+                progreso(bytesHechos, bytesTotal)
+                pendiente = 0
+            }
+        }
+    }
 
     // ===================== Manifiesto =====================
 

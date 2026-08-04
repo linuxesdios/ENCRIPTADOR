@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 using System.Windows;
@@ -291,7 +292,7 @@ public partial class MainWindow : Window
 
         var ruta = _rutasSeleccionadas[0];
         var esCarpeta = Directory.Exists(ruta);
-        var progresoUno = esCarpeta ? CrearProgreso() : null;
+        var progresoUno = CrearProgreso();
 
         await EjecutarOperacionAsync(
             () => CryptoService.Encriptar(ruta, password, conservarOriginal, borradoSeguro, progresoUno),
@@ -335,8 +336,9 @@ public partial class MainWindow : Window
             return;
         }
 
+        var progreso = CrearProgreso();
         await EjecutarOperacionAsync(
-            () => CryptoService.Desencriptar(ruta, password, conservarOriginal),
+            () => CryptoService.Desencriptar(ruta, password, conservarOriginal, progreso),
             _ => Loc.T("common.estado.archivoDesencriptado"));
     }
 
@@ -404,15 +406,41 @@ public partial class MainWindow : Window
         return true;
     }
 
-    private IProgress<(int Actual, int Total)> CrearProgreso() =>
-        new Progress<(int Actual, int Total)>(p =>
+    private IProgress<(long BytesHechos, long BytesTotal)> CrearProgreso()
+    {
+        var cronometro = Stopwatch.StartNew();
+        return new Progress<(long BytesHechos, long BytesTotal)>(p =>
         {
+            if (p.BytesTotal <= 0)
+                return;
+
             BarraProgreso.IsIndeterminate = false;
             BarraProgreso.Minimum = 0;
-            BarraProgreso.Maximum = p.Total;
-            BarraProgreso.Value = p.Actual;
-            MostrarEstado("⏳", Loc.T("common.estado.procesandoArchivo", p.Actual, p.Total), EstadoTipo.Info);
+            BarraProgreso.Maximum = p.BytesTotal;
+            BarraProgreso.Value = p.BytesHechos;
+
+            var porcentaje = (int)(p.BytesHechos * 100.0 / p.BytesTotal);
+            var elapsed = cronometro.Elapsed.TotalSeconds;
+            if (elapsed > 0.3 && p.BytesHechos > 0)
+            {
+                var throughput = p.BytesHechos / elapsed;
+                var etaSegundos = (p.BytesTotal - p.BytesHechos) / throughput;
+                MostrarEstado("⏳", Loc.T("common.estado.progresoConEta", porcentaje, FormatearTiempo(etaSegundos)), EstadoTipo.Info);
+            }
+            else
+            {
+                MostrarEstado("⏳", Loc.T("common.estado.progreso", porcentaje), EstadoTipo.Info);
+            }
         });
+    }
+
+    private static string FormatearTiempo(double segundos)
+    {
+        var total = Math.Max(0, (int)Math.Round(segundos));
+        if (total < 60)
+            return $"{total}s";
+        return $"{total / 60}m {total % 60}s";
+    }
 
     private async Task EjecutarOperacionAsync<T>(Func<T> operacion, Func<T, string> mensajeExito)
     {

@@ -87,7 +87,8 @@ private fun PantallaPrincipal(uriInicial: Uri?) {
     var mostrarPassword by remember { mutableStateOf(false) }
     var conservarOriginal by remember { mutableStateOf(false) }
     var procesando by remember { mutableStateOf(false) }
-    var progreso by remember { mutableStateOf<Pair<Int, Int>?>(null) }
+    var progreso by remember { mutableStateOf<Pair<Long, Long>?>(null) }
+    var inicioOperacion by remember { mutableStateOf(0L) }
     var mensaje by remember { mutableStateOf<String?>(null) }
     var tipoMensaje by remember { mutableStateOf(TipoEstado.INFO) }
 
@@ -153,6 +154,7 @@ private fun PantallaPrincipal(uriInicial: Uri?) {
         scope.launch {
             procesando = true
             progreso = null
+            inicioOperacion = System.currentTimeMillis()
             mostrar(Localization.t("pantalla.elegirDondeGuardar"), TipoEstado.INFO)
             try {
                 when (sel) {
@@ -165,7 +167,7 @@ private fun PantallaPrincipal(uriInicial: Uri?) {
                             withContext(Dispatchers.IO) {
                                 resolver.openInputStream(uri)!!.use { entrada ->
                                     resolver.openOutputStream(destinoUri)!!.use { salida ->
-                                        CryptoService.encriptarArchivo(entrada, longitud, salida, password)
+                                        CryptoService.encriptarArchivo(entrada, longitud, salida, password) { a, t -> progreso = a to t }
                                     }
                                 }
                                 if (!conservarOriginal) borrarUri(context, uri)
@@ -227,6 +229,8 @@ private fun PantallaPrincipal(uriInicial: Uri?) {
         val uri = sel.uris[0]
         scope.launch {
             procesando = true
+            progreso = null
+            inicioOperacion = System.currentTimeMillis()
             mostrar(Localization.t("common.estado.verificandoPassword"), TipoEstado.INFO)
             try {
                 val esCarpeta = withContext(Dispatchers.IO) {
@@ -239,7 +243,7 @@ private fun PantallaPrincipal(uriInicial: Uri?) {
                     withContext(Dispatchers.IO) {
                         resolver.openInputStream(uri)!!.use { entrada ->
                             resolver.openOutputStream(destinoUri)!!.use { salida ->
-                                CryptoService.desencriptarArchivo(entrada, salida, password)
+                                CryptoService.desencriptarArchivo(entrada, salida, password) { a, t -> progreso = a to t }
                             }
                         }
                         if (!conservarOriginal) borrarUri(context, uri)
@@ -269,6 +273,8 @@ private fun PantallaPrincipal(uriInicial: Uri?) {
         if (destinoTreeUri != null && sesion != null && uriEnc != null) {
             scope.launch {
                 procesando = true
+                progreso = null
+                inicioOperacion = System.currentTimeMillis()
                 mostrar(Localization.t("pantalla.extrayendo"), TipoEstado.INFO)
                 try {
                     val raizDestino = DocumentFile.fromTreeUri(context, destinoTreeUri)
@@ -411,13 +417,22 @@ private fun PantallaPrincipal(uriInicial: Uri?) {
                 if (procesando) {
                     Spacer(Modifier.height(14.dp))
                     val p = progreso
-                    if (p != null) {
+                    if (p != null && p.second > 0L) {
                         LinearProgressIndicator(
                             progress = { p.first.toFloat() / p.second.toFloat() },
                             modifier = Modifier.fillMaxWidth(),
                             color = ColorAcento1, trackColor = ColorFondoCampo,
                         )
-                        Text(Localization.t("pantalla.progresoArchivo", p.first, p.second), fontSize = 11.sp, color = ColorTextoSecundario, modifier = Modifier.padding(top = 6.dp))
+                        val porcentaje = (p.first * 100.0 / p.second).toInt()
+                        val elapsed = (System.currentTimeMillis() - inicioOperacion) / 1000.0
+                        val texto = if (elapsed > 0.3 && p.first > 0) {
+                            val throughput = p.first / elapsed
+                            val etaSegundos = ((p.second - p.first) / throughput).toLong()
+                            Localization.t("common.estado.progresoConEta", porcentaje, formatearTiempo(etaSegundos))
+                        } else {
+                            Localization.t("common.estado.progreso", porcentaje)
+                        }
+                        Text(texto, fontSize = 11.sp, color = ColorTextoSecundario, modifier = Modifier.padding(top = 6.dp))
                     } else {
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = ColorAcento1, trackColor = ColorFondoCampo)
                     }
@@ -521,6 +536,12 @@ private fun BrushAcento() = Brush.linearGradient(listOf(ColorAcento1, ColorAcent
 
 @Composable
 private fun BrushExito() = Brush.linearGradient(listOf(ColorExito, ColorExitoOscuro))
+
+private fun formatearTiempo(segundos: Long): String {
+    val total = segundos.coerceAtLeast(0)
+    if (total < 60) return "${total}s"
+    return "${total / 60}m ${total % 60}s"
+}
 
 private fun colorFuerza(nivel: NivelFuerza): Color = when (nivel) {
     NivelFuerza.MUY_DEBIL, NivelFuerza.DEBIL -> ColorError

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 using System.Windows;
@@ -170,6 +171,7 @@ public partial class QuickWindow : Window
         }
 
         SetControlesHabilitados(false);
+        BarraProgreso.IsIndeterminate = true;
         MostrarEstado("⏳", Loc.T("common.estado.procesando"), Estado.Info);
 
         try
@@ -191,9 +193,8 @@ public partial class QuickWindow : Window
                     var seleccionados = explorador.Seleccionados;
                     var destinoDir = Path.GetDirectoryName(_ruta) ?? string.Empty;
 
-                    var progreso = new Progress<(int Actual, int Total)>(p =>
-                        MostrarEstado("⏳", Loc.T("common.estado.procesandoArchivo", p.Actual, p.Total), Estado.Info));
-                    await Task.Run(() => sesion.ExtraerVarios(seleccionados, destinoDir, progreso));
+                    var progresoExtraer = CrearProgreso();
+                    await Task.Run(() => sesion.ExtraerVarios(seleccionados, destinoDir, progresoExtraer));
 
                     if (!conservarOriginal)
                         File.Delete(_ruta);
@@ -208,13 +209,15 @@ public partial class QuickWindow : Window
             }
             else if (_esDesencriptar)
             {
-                await Task.Run(() => CryptoService.Desencriptar(_ruta, password, conservarOriginal));
+                var progresoDesencriptar = CrearProgreso();
+                await Task.Run(() => CryptoService.Desencriptar(_ruta, password, conservarOriginal, progresoDesencriptar));
                 texto = Loc.T("common.estado.archivoDesencriptado");
             }
             else
             {
                 var borradoSeguro = ChkBorradoSeguro.IsChecked == true;
-                var (procesados, _) = await Task.Run(() => CryptoService.Encriptar(_ruta, password, conservarOriginal, borradoSeguro));
+                var progresoEncriptar = CrearProgreso();
+                var (procesados, _) = await Task.Run(() => CryptoService.Encriptar(_ruta, password, conservarOriginal, borradoSeguro, progresoEncriptar));
                 texto = _esCarpeta
                     ? Loc.T("common.estado.carpetaEncriptada", procesados)
                     : Loc.T("common.estado.archivoEncriptado");
@@ -226,20 +229,59 @@ public partial class QuickWindow : Window
         }
         catch (CryptographicException)
         {
+            BarraProgreso.IsIndeterminate = false;
             MostrarEstado("❌", Loc.T("common.estado.noPudoDesencriptar"), Estado.Error);
             SetControlesHabilitados(true);
             TxtPassword.Focus();
         }
         catch (InvalidOperationException ex)
         {
+            BarraProgreso.IsIndeterminate = false;
             MostrarEstado("⚠️", ex.Message, Estado.Error);
             SetControlesHabilitados(true);
         }
         catch (Exception ex)
         {
+            BarraProgreso.IsIndeterminate = false;
             MostrarEstado("❌", Loc.T("common.estado.error", ex.Message), Estado.Error);
             SetControlesHabilitados(true);
         }
+    }
+
+    private IProgress<(long BytesHechos, long BytesTotal)> CrearProgreso()
+    {
+        var cronometro = Stopwatch.StartNew();
+        return new Progress<(long BytesHechos, long BytesTotal)>(p =>
+        {
+            if (p.BytesTotal <= 0)
+                return;
+
+            BarraProgreso.IsIndeterminate = false;
+            BarraProgreso.Minimum = 0;
+            BarraProgreso.Maximum = p.BytesTotal;
+            BarraProgreso.Value = p.BytesHechos;
+
+            var porcentaje = (int)(p.BytesHechos * 100.0 / p.BytesTotal);
+            var elapsed = cronometro.Elapsed.TotalSeconds;
+            if (elapsed > 0.3 && p.BytesHechos > 0)
+            {
+                var throughput = p.BytesHechos / elapsed;
+                var etaSegundos = (p.BytesTotal - p.BytesHechos) / throughput;
+                MostrarEstado("⏳", Loc.T("common.estado.progresoConEta", porcentaje, FormatearTiempo(etaSegundos)), Estado.Info);
+            }
+            else
+            {
+                MostrarEstado("⏳", Loc.T("common.estado.progreso", porcentaje), Estado.Info);
+            }
+        });
+    }
+
+    private static string FormatearTiempo(double segundos)
+    {
+        var total = Math.Max(0, (int)Math.Round(segundos));
+        if (total < 60)
+            return $"{total}s";
+        return $"{total / 60}m {total % 60}s";
     }
 
     private enum Estado { Info, Exito, Error }

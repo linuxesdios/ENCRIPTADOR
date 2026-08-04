@@ -79,7 +79,9 @@
             <Button x:Name="BtnAccion" Content="Encriptar" Style="{StaticResource BotonAcento}"
                     Margin="0,18,0,0" Click="BtnAccion_Click"/>
 
-            <StackPanel Orientation="Horizontal" Margin="0,14,0,0" VerticalAlignment="Top">
+            <ProgressBar x:Name="BarraProgreso" Style="{StaticResource BarraModerna}" Margin="0,14,0,0"/>
+
+            <StackPanel Orientation="Horizontal" Margin="0,10,0,0" VerticalAlignment="Top">
                 <TextBlock x:Name="IconoEstado" FontSize="13" Margin="0,0,8,0"/>
                 <TextBlock x:Name="TxtEstado" TextWrapping="Wrap" FontSize="12"
                            Foreground="{StaticResource BrushTextoSecundario}"/>

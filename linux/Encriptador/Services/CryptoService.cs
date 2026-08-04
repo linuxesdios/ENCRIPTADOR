@@ -53,7 +53,7 @@ public static class CryptoService
     /// <summary>Encripta un archivo o una carpeta completa en un único ".enc".</summary>
     public static (int ArchivosIncluidos, string RutaDestino) Encriptar(
         string ruta, string password, bool conservarOriginal = false, bool borradoSeguro = false,
-        IProgress<(int Actual, int Total)>? progreso = null)
+        IProgress<(long BytesHechos, long BytesTotal)>? progreso = null)
     {
         if (Directory.Exists(ruta))
         {
@@ -85,7 +85,8 @@ public static class CryptoService
                 EscribirInt64(salida, longitud);
 
                 using var entrada = File.OpenRead(ruta);
-                CifrarStream(entrada, salida, clave, longitud);
+                var onChunk = progreso is null ? null : AcumuladorDeProgreso(progreso, longitud);
+                CifrarStream(entrada, salida, clave, longitud, onChunk);
             }
 
             if (!conservarOriginal)
@@ -103,7 +104,7 @@ public static class CryptoService
     /// </summary>
     public static int EncriptarVarios(
         IReadOnlyList<string> rutas, string destino, string password, bool conservarOriginal = false,
-        bool borradoSeguro = false, IProgress<(int Actual, int Total)>? progreso = null)
+        bool borradoSeguro = false, IProgress<(long BytesHechos, long BytesTotal)>? progreso = null)
     {
         var fuente = rutas.Select(r => (RutaCompleta: r, RutaRelativa: Path.GetFileName(r))).ToList();
         var cantidad = EncriptarConjunto(fuente, destino, password, progreso);
@@ -117,7 +118,7 @@ public static class CryptoService
 
     private static int EncriptarConjunto(
         List<(string RutaCompleta, string RutaRelativa)> fuente, string destino, string password,
-        IProgress<(int, int)>? progreso)
+        IProgress<(long BytesHechos, long BytesTotal)>? progreso)
     {
         var salt = RandomNumberGenerator.GetBytes(SaltSize);
         var clave = DerivarClave(password, salt);
@@ -140,18 +141,16 @@ public static class CryptoService
         using (var msManifiesto = new MemoryStream(manifiestoPlano))
         {
             EscribirInt64(salida, manifiestoPlano.Length);
+            // El manifiesto no cuenta para el progreso: no se le pasa onChunk.
             CifrarStream(msManifiesto, salida, clave, manifiestoPlano.Length);
         }
 
-        var total = entradas.Count;
-        var procesados = 0;
+        var bytesTotal = entradas.Sum(e => e.Longitud);
+        var onChunk = progreso is null ? null : AcumuladorDeProgreso(progreso, bytesTotal);
         foreach (var e in entradas)
         {
             using (var entradaArchivo = File.OpenRead(e.RutaCompleta))
-                CifrarStream(entradaArchivo, salida, clave, e.Longitud);
-
-            procesados++;
-            progreso?.Report((procesados, total));
+                CifrarStream(entradaArchivo, salida, clave, e.Longitud, onChunk);
         }
 
         return entradas.Count;
@@ -160,7 +159,9 @@ public static class CryptoService
     // ===================== Desencriptar (archivo suelto) =====================
 
     /// <summary>Desencripta un ".enc" de archivo individual (no carpeta) directamente a su ubicación final.</summary>
-    public static (int ArchivosRestaurados, string RutaDestino) Desencriptar(string ruta, string password, bool conservarOriginal = false)
+    public static (int ArchivosRestaurados, string RutaDestino) Desencriptar(
+        string ruta, string password, bool conservarOriginal = false,
+        IProgress<(long BytesHechos, long BytesTotal)>? progreso = null)
     {
         ValidarRutaEnc(ruta);
 
@@ -180,7 +181,8 @@ public static class CryptoService
                 throw new CryptographicException(Loc.T("crypto.archivoDanado"));
 
             using var salida = File.Create(nombreBase);
-            DescifrarStream(entrada, salida, clave, longitud);
+            var onChunk = progreso is null ? null : AcumuladorDeProgreso(progreso, longitud);
+            DescifrarStream(entrada, salida, clave, longitud, onChunk);
         }
 
         if (!conservarOriginal)
@@ -251,7 +253,7 @@ public static class CryptoService
             _entradas.Select(e => (e.Relativa, e.Longitud)).ToList();
 
         /// <summary>Descifra un único archivo (por su ruta relativa) al destino indicado.</summary>
-        public void ExtraerArchivo(string rutaRelativa, string destino)
+        public void ExtraerArchivo(string rutaRelativa, string destino, Action<int>? onChunk = null)
         {
             var entrada = _entradas.FirstOrDefault(e => e.Relativa == rutaRelativa)
                 ?? throw new FileNotFoundException(Loc.T("crypto.archivoNoManifiesto"), rutaRelativa);
@@ -264,20 +266,22 @@ public static class CryptoService
             origen.Seek(_inicioDatos + entrada.Offset, SeekOrigin.Begin);
 
             using var salida = File.Create(destino);
-            DescifrarStream(origen, salida, _clave, entrada.Longitud);
+            DescifrarStream(origen, salida, _clave, entrada.Longitud, onChunk);
         }
 
         /// <summary>Descifra varios archivos (rutas relativas) dentro de <paramref name="carpetaDestino"/>, preservando su estructura.</summary>
-        public void ExtraerVarios(IEnumerable<string> rutasRelativas, string carpetaDestino, IProgress<(int Actual, int Total)>? progreso = null)
+        public void ExtraerVarios(IEnumerable<string> rutasRelativas, string carpetaDestino,
+            IProgress<(long BytesHechos, long BytesTotal)>? progreso = null)
         {
             var lista = rutasRelativas.ToList();
-            var procesados = 0;
+            var seleccionados = new HashSet<string>(lista);
+            var bytesTotal = _entradas.Where(e => seleccionados.Contains(e.Relativa)).Sum(e => e.Longitud);
+            var onChunk = progreso is null ? null : AcumuladorDeProgreso(progreso, bytesTotal);
+
             foreach (var relativa in lista)
             {
                 var destino = Path.Combine(carpetaDestino, relativa.Replace('/', Path.DirectorySeparatorChar));
-                ExtraerArchivo(relativa, destino);
-                procesados++;
-                progreso?.Report((procesados, lista.Count));
+                ExtraerArchivo(relativa, destino, onChunk);
             }
         }
     }
@@ -286,7 +290,7 @@ public static class CryptoService
 
     // ===================== Cifrado/descifrado por bloques (AES-256-GCM) =====================
 
-    private static void CifrarStream(Stream entrada, Stream salida, byte[] clave, long longitudTotal)
+    private static void CifrarStream(Stream entrada, Stream salida, byte[] clave, long longitudTotal, Action<int>? onChunk = null)
     {
         using var aesGcm = new AesGcm(clave, TagSize);
         var buffer = new byte[TamanoChunk];
@@ -309,10 +313,11 @@ public static class CryptoService
             salida.Write(cifrado);
 
             restante -= tam;
+            onChunk?.Invoke(tam);
         }
     }
 
-    private static void DescifrarStream(Stream entrada, Stream salida, byte[] clave, long longitudTotal)
+    private static void DescifrarStream(Stream entrada, Stream salida, byte[] clave, long longitudTotal, Action<int>? onChunk = null)
     {
         using var aesGcm = new AesGcm(clave, TagSize);
         var nonce = new byte[NonceSize];
@@ -340,6 +345,7 @@ public static class CryptoService
 
             salida.Write(plano);
             restante -= tam;
+            onChunk?.Invoke(tam);
         }
     }
 
@@ -348,6 +354,28 @@ public static class CryptoService
 
     private static long LongitudCifrada(long longitudOriginal) =>
         longitudOriginal + (long)NumeroDeChunks(longitudOriginal) * (NonceSize + TagSize);
+
+    /// <summary>
+    /// Envuelve un IProgress en bytes en un callback liviano por bloque: acumula
+    /// bytes procesados y solo dispara el Report real cada ~256KB o en el último
+    /// bloque, para no saturar la UI en archivos grandes.
+    /// </summary>
+    private static Action<int> AcumuladorDeProgreso(IProgress<(long BytesHechos, long BytesTotal)> progreso, long bytesTotal)
+    {
+        const long Umbral = 256 * 1024;
+        long bytesHechos = 0;
+        long pendiente = 0;
+        return tam =>
+        {
+            bytesHechos += tam;
+            pendiente += tam;
+            if (pendiente >= Umbral || bytesHechos >= bytesTotal)
+            {
+                progreso.Report((bytesHechos, bytesTotal));
+                pendiente = 0;
+            }
+        };
+    }
 
     // ===================== Borrado (normal y seguro) =====================
 
