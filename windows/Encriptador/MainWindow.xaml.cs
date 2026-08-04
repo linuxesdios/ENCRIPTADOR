@@ -33,6 +33,7 @@ public partial class MainWindow : Window
     {
         TxtTagline.Text = Loc.T("main.tagline");
         LblArchivo.Text = Loc.T("main.archivo.etiqueta");
+        BtnElegirCarpeta.Content = "\U0001F4C1  " + Loc.T("main.btn.elegirCarpeta");
         ActualizarTextoArchivo();
         LblContrasena.Text = Loc.T("common.contrasena");
         LblRepetir.Text = Loc.T("common.repetirContrasena");
@@ -86,6 +87,17 @@ public partial class MainWindow : Window
 
         if (dialog.ShowDialog(this) == true)
             SeleccionarRutas(dialog.FileNames);
+    }
+
+    private void BtnElegirCarpeta_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFolderDialog
+        {
+            Title = Loc.T("main.dialog.abrir.titulo")
+        };
+
+        if (dialog.ShowDialog(this) == true)
+            SeleccionarRutas(new[] { dialog.FolderName });
     }
 
     private void Window_DragOver(object sender, DragEventArgs e)

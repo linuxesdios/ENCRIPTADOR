@@ -50,6 +50,7 @@ public static partial class Loc
         // ===== main (MainWindow) =====
         ["main.tagline"] = "Шифрование файлов AES-256-GCM",
         ["main.archivo.etiqueta"] = "ФАЙЛ",
+        ["main.btn.elegirCarpeta"] = "Папка",
         ["main.archivo.placeholder"] = "Перетащите файл(ы) или папку сюда, или нажмите, чтобы выбрать",
         ["main.archivo.carpeta"] = "Папка: {0}",
         ["main.archivo.variosSeleccionados"] = "Выбрано файлов: {0}",

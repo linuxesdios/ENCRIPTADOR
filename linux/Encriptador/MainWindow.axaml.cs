@@ -34,6 +34,7 @@ public partial class MainWindow : Window
     {
         TxtTagline.Text = Loc.T("main.tagline");
         LblArchivo.Text = Loc.T("main.archivo.etiqueta");
+        BtnElegirCarpeta.Content = "\U0001F4C1  " + Loc.T("main.btn.elegirCarpeta");
         ActualizarTextoArchivo();
         LblContrasena.Text = Loc.T("common.contrasena");
         LblRepetir.Text = Loc.T("common.repetirContrasena");
@@ -92,6 +93,19 @@ public partial class MainWindow : Window
 
         if (rutas.Length > 0)
             SeleccionarRutas(rutas);
+    }
+
+    private async void BtnElegirCarpeta_Click(object? sender, RoutedEventArgs e)
+    {
+        var opciones = new FolderPickerOpenOptions
+        {
+            Title = Loc.T("main.dialog.abrir.titulo")
+        };
+
+        var carpetas = await StorageProvider.OpenFolderPickerAsync(opciones);
+        var ruta = carpetas.FirstOrDefault()?.TryGetLocalPath();
+        if (ruta is not null)
+            SeleccionarRutas(new[] { ruta });
     }
 
     private void ZonaArchivo_PointerEntered(object? sender, PointerEventArgs e) =>

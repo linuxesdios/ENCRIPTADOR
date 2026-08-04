@@ -50,6 +50,7 @@ public static partial class Loc
         // ===== main (MainWindow) =====
         ["main.tagline"] = "AES-256-GCM 文件加密",
         ["main.archivo.etiqueta"] = "文件",
+        ["main.btn.elegirCarpeta"] = "文件夹",
         ["main.archivo.placeholder"] = "将文件或文件夹拖到此处,或点击选择",
         ["main.archivo.carpeta"] = "文件夹:{0}",
         ["main.archivo.variosSeleccionados"] = "已选择 {0} 个文件",

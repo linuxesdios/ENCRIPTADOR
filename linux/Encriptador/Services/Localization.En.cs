@@ -50,6 +50,7 @@ public static partial class Loc
         // ===== main (MainWindow) =====
         ["main.tagline"] = "AES-256-GCM file encryption",
         ["main.archivo.etiqueta"] = "FILE",
+        ["main.btn.elegirCarpeta"] = "Folder",
         ["main.archivo.placeholder"] = "Drag file(s) or a folder here, or click to choose",
         ["main.archivo.carpeta"] = "Folder: {0}",
         ["main.archivo.variosSeleccionados"] = "{0} files selected",
